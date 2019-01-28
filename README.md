@@ -3,8 +3,7 @@
 # SUMO Data Access
 > Additional information or tagline
 
-A brief description of your project, what it is used for and how does life get
-awesome when someone starts to use it.
+Scripts to pull data from various sources for SUMO.
 
 ## Installing / Getting started
 
