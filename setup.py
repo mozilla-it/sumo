@@ -1,5 +1,5 @@
 from setuptools import setup
-
+import os
 
 def readme():
     with open('README.md') as f:

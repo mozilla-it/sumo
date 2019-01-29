@@ -1,6 +1,9 @@
-from . import SurveyGizmo #includes json lib
+import SurveyGizmo #includes json lib
 from datetime import datetime
 import csv
+import json
+import base64
+import os
 
 def main():
   start=datetime.now()
@@ -20,6 +23,6 @@ def main():
   with open("csat_results.csv", "w") as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
-      writer.writerows(SurveyGizmo.get_survey_data(params))
+      writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
       
   print(datetime.now()-start)

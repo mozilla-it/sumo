@@ -17,7 +17,7 @@ def get_survey_data_row(row):
 			get_answer(row['survey_data'], str(2), ''),
 			get_answer(row['survey_data'], str(4), '')]
 
-def get_survey_data(params):
+def get_survey_data(api_url_base, params):
 	api_url = '{0}?_method=GET'.format(api_url_base)
 	
 	results = []
@@ -44,7 +44,7 @@ def get_survey_data(params):
 		print(total_pages)
 		print(raw['total_count'])
 
-		for page in range(2,total_pages):
+		for page in range(2,3): #total_pages):
 			params['page'] = str(page)
 			print(page)
 			response = requests.get(api_url, params=params)

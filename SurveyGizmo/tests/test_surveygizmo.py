@@ -8,7 +8,8 @@ from SurveyGizmo.run_get_survey_data import main
 
 class TestSurveyGizmo(TestCase):
     def test_cmd(self):
-        run_get_survey_data.main()
+      main()
+        #run_get_survey_data.main()
 
     def test_http_401_error(self):
       survey_id = '4669267'
@@ -16,5 +17,5 @@ class TestSurveyGizmo(TestCase):
       api_url_base = 'https://restapi.surveygizmo.com/v5/survey/' + survey_id + '/surveyresponse.json'
 
       params = {'resultsperpage': results_per_page, 'page': str(1)}
-      retValue = fSurveyGizmo.get_survey_data(params))
+      retValue = SurveyGizmo.get_survey_data(api_url_base, params)
       self.assertIsNone(retValue)
