@@ -49,7 +49,8 @@ make install
 
 ### Units Tests
 
-```python setup.py test
+```shell
+python setup.py test
 ```
 
 Here again you should state what actually happens when the code above gets
