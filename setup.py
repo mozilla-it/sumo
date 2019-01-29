@@ -1,15 +1,29 @@
-from setuptools import setup, find_packages
-import os
+from setuptools import setup
 
-setup(name='sumo-data-access',
-      version='0.0.1',
+
+def readme():
+    with open('README.md') as f:
+        return f.read()
+
+
+setup(name='sumo',
+      version='0.1',
       description='Scripts for SUMO data access',
-      python_requires='>=3.4',
+      long_description=readme(),
+      keywords='sumo surveygizmo kitsune twitter reviews',
+      url='https://github.com/ophie200/sumo',
       author='Nancy Wong',
       author_email='nawong@mozilla.com',
-      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-      scripts=[s for s in setuptools.findall('bin/') if os.path.splitext(s)[1] != '.pyc'],
+      license='...',
+      packages=['SurveyGizmo'],
       install_requires=[
-        'requests'
-      ]
-)
+          'requests',
+      ],
+      test_suite='nose.collector',
+      tests_require=['nose', 'nose-cover3'],
+      entry_points={
+          'console_scripts': ['run-surveygizmo=SurveyGizmo.run_get_survey_data:main'],
+      },
+      include_package_data=True,
+      zip_safe=False)
+
