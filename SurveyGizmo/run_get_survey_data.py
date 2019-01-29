@@ -11,7 +11,7 @@ def main():
   """
   parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
   parser.add_argument('--outdir', action='store', help='file output directory', type=str, default='.')
-  args = parser.parse_args(args)
+  args = parser.parse_args()
   
   start=datetime.now()
   
