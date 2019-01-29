@@ -24,9 +24,9 @@ if __name__ == "__main__":
 
   params = {'resultsperpage': results_per_page, 'api_token': api_token, 'api_secret_key': api_secret_key, 'page': str(1)}
 
-  with open("csat_results.csv", "w") as f:
+  with open(args.outdir+"/csat_results.csv", "w") as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
-      writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params, args.outdir))
+      writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
       
   print(datetime.now()-start)
