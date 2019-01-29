@@ -5,11 +5,14 @@ import json
 import base64
 import os, argparse
 
-if __name__ == "__main__":
+def main(args=None):
+  """
+  Main entry point for calls to Survey Gizmo REST API.
+  """
   parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
   parser.add_argument('--outdir', action='store', help='file output directory', type=str, default='.')
-  args = parser.parse_args()
-
+  args = parser.parse_args(args)
+  
   start=datetime.now()
   
   api_token_fn = os.environ['SURVEYGIZMO_SECRETS'] #'survey_gizmo_api_keys_encoded'
@@ -30,3 +33,6 @@ if __name__ == "__main__":
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
       
   print(datetime.now()-start)
+
+if __name__ == '__main__':
+  main()
