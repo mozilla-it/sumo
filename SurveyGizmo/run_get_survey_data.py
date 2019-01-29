@@ -5,7 +5,7 @@ import json
 import base64
 import os, argparse
 
-def main(args=None):
+def main():
   """
   Main entry point for calls to Survey Gizmo REST API.
   """
