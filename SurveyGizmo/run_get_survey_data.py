@@ -1,4 +1,4 @@
-import SurveyGizmo #includes json lib
+from . import SurveyGizmo #includes json lib
 from datetime import datetime
 import csv
 
