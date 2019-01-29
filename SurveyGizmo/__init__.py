@@ -17,7 +17,7 @@ def get_survey_data_row(row):
 			get_answer(row['survey_data'], str(2), ''),
 			get_answer(row['survey_data'], str(4), '')]
 
-def get_survey_data():
+def get_survey_data(params):
 	api_url = '{0}?_method=GET'.format(api_url_base)
 	
 	results = []
