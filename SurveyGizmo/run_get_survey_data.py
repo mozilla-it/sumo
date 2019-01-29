@@ -27,6 +27,6 @@ if __name__ == "__main__":
   with open("csat_results.csv", "w") as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
-      writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params, arg.outdir))
+      writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params, args.outdir))
       
   print(datetime.now()-start)
