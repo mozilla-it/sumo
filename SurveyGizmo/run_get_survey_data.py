@@ -5,7 +5,7 @@ import csv
 def main():
   start=datetime.now()
   
-  api_token_fn = 'survey_gizmo_api_keys_encoded'
+  api_token_fn = os.environ['SURVEYGIZMO_SECRETS'] #'survey_gizmo_api_keys_encoded'
   tokens =json.loads(base64.b64decode(open(api_token_fn, "rb").read()).decode('utf-8'))
 
   api_token = tokens['api_token']
