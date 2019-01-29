@@ -3,9 +3,13 @@ from datetime import datetime
 import csv
 import json
 import base64
-import os
+import os, argparse
 
-def main():
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
+  parser.add_argument('--outdir', action='store', help='file output directory', type=str, default='.')
+  args = parser.parse_args()
+
   start=datetime.now()
   
   api_token_fn = os.environ['SURVEYGIZMO_SECRETS'] #'survey_gizmo_api_keys_encoded'
@@ -23,6 +27,6 @@ def main():
   with open("csat_results.csv", "w") as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
-      writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
+      writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params, arg.outdir))
       
   print(datetime.now()-start)
