@@ -8,8 +8,7 @@ from SurveyGizmo.run_get_survey_data import main
 
 class TestSurveyGizmo(TestCase):
     def test_cmd(self):
-      main()
-        #run_get_survey_data.main()
+      main('.')
 
     def test_http_401_error(self):
       survey_id = '4669267'
