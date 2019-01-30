@@ -10,7 +10,7 @@ def main():
   Main entry point for calls to Survey Gizmo REST API.
   """
   parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
-  parser.add_argument('--outdir', action='store', help='file output directory', type=str, default='.')
+  parser.add_argument('--outdir', nargs='?', const='.', type=str, help='file output directory')
   args = parser.parse_args()
   
   start=datetime.now()
@@ -27,12 +27,12 @@ def main():
 
   params = {'resultsperpage': results_per_page, 'api_token': api_token, 'api_secret_key': api_secret_key, 'page': str(1)}
 
-  with open(args.outdir+"/csat_results.csv", "w") as f:
+  with open("/csat_results.csv", "w") as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
       
   print(datetime.now()-start)
 
-if __name__ == '__main__':
-  main()
+#if __name__ == '__main__':
+#  main()
