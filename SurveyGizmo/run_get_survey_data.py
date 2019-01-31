@@ -9,11 +9,8 @@ def main(outdir):
   
   start=datetime.now()
   
-  api_token_fn = os.environ['SURVEYGIZMO_SECRETS'] #'survey_gizmo_api_keys_encoded'
-  tokens =json.loads(base64.b64decode(open(api_token_fn, "rb").read()).decode('utf-8'))
-
-  api_token = tokens['api_token']
-  api_secret_key = tokens['api_secret_key']
+  api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']).decode("utf-8").replace('\n', '')
+  api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']).decode("utf-8").replace('\n', '')
 
   survey_id = '4669267'
   results_per_page = '500' # takes about 30min to download all pages
