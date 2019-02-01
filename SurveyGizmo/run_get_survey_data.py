@@ -9,8 +9,8 @@ def main(outdir):
   
   start=datetime.now()
   
-  api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']+ "==").decode("utf-8").replace('\n', '')
-  api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']+ "==").decode("utf-8").replace('\n', '')
+  api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']).decode("utf-8")
+  api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']).decode("utf-8")
 
   survey_id = '4669267'
   results_per_page = '500' # takes about 30min to download all pages
