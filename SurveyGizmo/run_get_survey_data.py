@@ -4,10 +4,16 @@ import csv
 import json
 import base64
 import os, argparse
+import logging
+
+logger = logging.getLogger(__name__)
 
 def main(outdir):
   
   start=datetime.now()
+  
+  logger.debug('Encoded Token: ' + os.environ['SUMO_SURVEYGIZMO_TOKEN'])
+  logger.debug('Token: ' + base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']))
   
   api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']).decode("utf-8")
   api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']).decode("utf-8")
