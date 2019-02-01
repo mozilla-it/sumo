@@ -18,6 +18,7 @@ setup(name='sumo',
       packages=['SurveyGizmo'],
       install_requires=[
           'requests',
+          'google-cloud-logging'
       ],
       test_suite='nose.collector',
       tests_require=['nose', 'nose-cover3'],
