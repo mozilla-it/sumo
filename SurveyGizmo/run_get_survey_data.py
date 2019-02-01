@@ -3,20 +3,35 @@ from datetime import datetime
 import csv
 import json
 import base64
-import os, argparse
+import os, re, argparse
 import logging
 
 logger = logging.getLogger(__name__)
+
+def decode_base64(data, altchars=b'+/'):
+    """Decode base64, padding being optional.
+
+    :param data: Base64 data as an ASCII byte string
+    :returns: The decoded byte string.
+
+    """
+    data = re.sub(rb'[^a-zA-Z0-9%s]+' % altchars, b'', data)  # normalize
+    data = str(data)
+    missing_padding = len(data) % 4
+    if missing_padding:
+        data += b'='* (4 - missing_padding)
+    return base64.b64decode(data, altchars)
 
 def main(outdir):
   
   start=datetime.now()
   
-  logger.debug('Encoded Token: ' + os.environ['SUMO_SURVEYGIZMO_TOKEN'])
-  logger.debug('Token: ' + base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']))
-  
   with open("gs://moz-it-data-sumo/tmp/out.csv", "w") as tmp_f:
     tmp_f.write( os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
+    tmp_f.write( decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN']) +'\n') 
+    
+  logger.debug('Encoded Token: ' + os.environ['SUMO_SURVEYGIZMO_TOKEN'])
+  logger.debug('Token: ' + decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN']))
     
   api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']).decode("utf-8")
   api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']).decode("utf-8")
