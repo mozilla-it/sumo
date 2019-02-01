@@ -26,6 +26,8 @@ def main(outdir):
   
   start=datetime.now()
   
+  logger.info('enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n')
+    
   with open("/tmp/out.csv", "w") as tmp_f:
     tmp_f.write( 'enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
     
