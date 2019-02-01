@@ -9,10 +9,10 @@ def main(outdir):
   
   start=datetime.now()
   
-  println(os.environ['SUMO_SURVEYGIZMO_TOKEN'])
-  println(base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']+ "=="))
-  println(base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']))
-  println(base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']+ "==").decode("utf-8"))
+  print(os.environ['SUMO_SURVEYGIZMO_TOKEN'])
+  print(base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']+ "=="))
+  print(base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']))
+  print(base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']+ "==").decode("utf-8"))
      
   api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']+ "==").decode("utf-8").replace('\n', '')
   api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']).decode("utf-8").replace('\n', '')
