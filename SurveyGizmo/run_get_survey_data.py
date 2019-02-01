@@ -26,8 +26,8 @@ def main(outdir):
   
   start=datetime.now()
   
-  #with open("gs://moz-it-data-sumo/tmp/out.csv", "w") as tmp_f:
-  #  tmp_f.write( 'enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
+  with open("/tmp/out.csv", "w") as tmp_f:
+    tmp_f.write( 'enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
     
   api_token = decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN'].rstrip().encode("utf-8"))
   api_secret_key = decode_base64(os.environ['SUMO_SURVEYGIZMO_KEY'].rstrip().encode("utf-8"))
