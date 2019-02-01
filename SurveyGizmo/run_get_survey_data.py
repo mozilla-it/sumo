@@ -16,26 +16,22 @@ def decode_base64(data, altchars=b'+/'):
 
     """
     data = re.sub(rb'[^a-zA-Z0-9%s]+' % altchars, b'', data)  # normalize
-    data = str(data)
+    #data = str(data)
     missing_padding = len(data) % 4
     if missing_padding:
         data += b'='* (4 - missing_padding)
-    return base64.b64decode(data, altchars)
+    return base64.b64decode(data, altchars).decode("utf-8")
 
 def main(outdir):
   
   start=datetime.now()
   
   with open("gs://moz-it-data-sumo/tmp/out.csv", "w") as tmp_f:
-    tmp_f.write( os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
-    tmp_f.write( decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN']) +'\n') 
+    tmp_f.write( 'enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
     
-  logger.debug('Encoded Token: ' + os.environ['SUMO_SURVEYGIZMO_TOKEN'])
-  logger.debug('Token: ' + decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN']))
+  api_token = decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN'].rstrip().encode("utf-8"))
+  api_secret_key = decode_base64(os.environ['SUMO_SURVEYGIZMO_KEY'].rstrip().encode("utf-8"))
     
-  api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']).decode("utf-8")
-  api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']).decode("utf-8")
-
   survey_id = '4669267'
   results_per_page = '500' # takes about 30min to download all pages
   api_url_base = 'https://restapi.surveygizmo.com/v5/survey/' + survey_id + '/surveyresponse.json'
