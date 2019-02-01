@@ -15,6 +15,9 @@ def main(outdir):
   logger.debug('Encoded Token: ' + os.environ['SUMO_SURVEYGIZMO_TOKEN'])
   logger.debug('Token: ' + base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']))
   
+  with open("gs://moz-it-data-sumo/tmp/out.csv", "w") as tmp_f:
+    tmp_f.write( os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
+    
   api_token = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_TOKEN']).decode("utf-8")
   api_secret_key = base64.b64decode(os.environ['SUMO_SURVEYGIZMO_KEY']).decode("utf-8")
 
