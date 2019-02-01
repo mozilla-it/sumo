@@ -4,8 +4,16 @@ import csv
 import json
 import base64
 import os, re, argparse
+
+import google.cloud.logging
+# Instantiates a client
+client = google.cloud.logging.Client()
+# Connects the logger to the root logging handler
+client.setup_logging()
+
 import logging
 
+logging.info('start logging')
 logger = logging.getLogger(__name__)
 
 def decode_base64(data, altchars=b'+/'):
