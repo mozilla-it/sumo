@@ -3,6 +3,8 @@ import requests
 import base64
 import logging
 
+logger = logging.getLogger(__name__)
+
 def get_answer(survey_data_row, question_num, default):
     try:
         return survey_data_row[question_num]['answer']
