@@ -39,8 +39,8 @@ def main(outdir):
   
   logger.info('enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n')
 
-  api_token = decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN'].rstrip().encode("utf-8"))
-  api_secret_key = decode_base64(os.environ['SUMO_SURVEYGIZMO_KEY'].rstrip().encode("utf-8"))
+  api_token = os.environ['SUMO_SURVEYGIZMO_TOKEN'] #decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN'].rstrip().encode("utf-8"))
+  api_secret_key = os.environ['SUMO_SURVEYGIZMO_KEY'] #decode_base64(os.environ['SUMO_SURVEYGIZMO_KEY'].rstrip().encode("utf-8"))
     
   survey_id = '4669267'
   results_per_page = '500' # takes about 30min to download all pages
@@ -54,7 +54,7 @@ def main(outdir):
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
   
   bucket = storage_client.get_bucket('moz-it-data-sumo')
-  blob = bucket.blob('surveygizmo')
+  blob = bucket.blob('surveygizmo/csat_results.csv')
   blob.upload_from_filename("/tmp/csat_results.csv")
 
   print(datetime.now()-start)
