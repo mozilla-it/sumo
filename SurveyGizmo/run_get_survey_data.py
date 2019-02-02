@@ -36,8 +36,6 @@ def decode_base64(data, altchars=b'+/'):
 def main(outdir):
   
   start=datetime.now()
-  
-  logger.info('enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n')
 
   api_token = os.environ['SUMO_SURVEYGIZMO_TOKEN'] #decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN'].rstrip().encode("utf-8"))
   api_secret_key = os.environ['SUMO_SURVEYGIZMO_KEY'] #decode_base64(os.environ['SUMO_SURVEYGIZMO_KEY'].rstrip().encode("utf-8"))
