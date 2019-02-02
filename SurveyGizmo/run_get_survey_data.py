@@ -16,6 +16,9 @@ import logging
 logging.info('start logging')
 logger = logging.getLogger(__name__)
 
+from google.cloud import storage
+storage_client = storage.Client()
+
 def decode_base64(data, altchars=b'+/'):
     """Decode base64, padding being optional.
 
@@ -35,10 +38,7 @@ def main(outdir):
   start=datetime.now()
   
   logger.info('enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n')
-    
-  with open("/tmp/out.csv", "w") as tmp_f:
-    tmp_f.write( 'enc_tok:' + os.environ['SUMO_SURVEYGIZMO_TOKEN'] +'\n') 
-    
+
   api_token = decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN'].rstrip().encode("utf-8"))
   api_secret_key = decode_base64(os.environ['SUMO_SURVEYGIZMO_KEY'].rstrip().encode("utf-8"))
     
@@ -48,11 +48,15 @@ def main(outdir):
 
   params = {'resultsperpage': results_per_page, 'api_token': api_token, 'api_secret_key': api_secret_key, 'page': str(1)}
 
-  with open(outdir + "/csat_results.csv", "w") as f:
+  with open("/tmp/csat_results.csv", "w") as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
-      
+  
+  bucket = storage_client.get_bucket('moz-it-data-sumo')
+  blob = bucket.blob('surveygizmo')
+  blob.upload_from_filename("/tmp/csat_results.csv")
+
   print(datetime.now()-start)
 
 if __name__ == '__main__':
