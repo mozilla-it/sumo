@@ -1,4 +1,4 @@
-![SUMO logo](https://github.com/ophie200/sumo/blob/master/images/SUMO-logo.png)
+![SUMO logo](https://github.com/mozilla-it/sumo/blob/master/images/SUMO-logo.png)
 
 # SUMO Data Access
 > Additional information or tagline
