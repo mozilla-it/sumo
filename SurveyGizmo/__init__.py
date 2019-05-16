@@ -38,7 +38,12 @@ def get_survey_data(api_url_base, params):
 	results.append(fields)
 			   
 	if response.status_code == 200:
-		raw = response.json()
+		try:
+			raw = response.json()
+		except ValueError:
+			logger.error("Content isn't valid JSON : %r" % response)
+			pass
+
 		for i in raw['data']:
 			results.append(get_survey_data_row(i))
 			
