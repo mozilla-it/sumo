@@ -112,7 +112,7 @@ def main(survey_id, bucket, output_folder, output_file, results_per_page,
     # Prepare our filtered query
     query = client.api.surveyresponse
     query = query.filter('date_submitted', '>=', start_date)
-    query = query.filter('date_submitted', '<=', end_date)
+    query = query.filter('date_submitted', '<', end_date)
 
     page = 1
     total_pages = 0
