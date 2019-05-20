@@ -101,7 +101,7 @@ def main(survey_id, bucket, output_folder, output_file, results_per_page,
                         delimiter=',',
                         quoting=csv.QUOTE_ALL,
                         skipinitialspace=True)
-    
+
     writer.writerow(OUTPUT_FIELDS)
 
     start_date = start.strftime(SURVEYGIZMO_DATE_FORMAT)
