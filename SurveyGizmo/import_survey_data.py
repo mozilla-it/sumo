@@ -150,7 +150,7 @@ def main(survey_id, bucket, output_folder, output_file, results_per_page,
         if page > total_pages:
             break
 
-    logger.info("Processed a total of %d/%r questions", total_responses,
+    logger.info("Processed a total of %d/%r responses", total_responses,
                 responses['total_count'])
 
 
