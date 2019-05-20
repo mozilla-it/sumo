@@ -19,7 +19,9 @@ setup(name='sumo',
       install_requires=[
           'requests',
           'google-cloud-logging',
-          'google-cloud-storage'
+          'google-cloud-storage',
+          'SurveyGizmo',
+          'fs-gcsfs',
       ],
       test_suite='nose.collector',
       tests_require=['nose', 'nose-cover3'],
