@@ -68,7 +68,7 @@ def get_survey_data(api_url_base, params):
 			else:
 				print('[!] HTTP {0} calling [{1}]'.format(response.status_code, api_url)) # 401 unauthorized
 
-		logger.info('returning results')
+		logger.info('returning {} results'.format(len(results)))
 		return results
 
 	else:
