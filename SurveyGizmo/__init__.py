@@ -49,8 +49,8 @@ def get_survey_data(api_url_base, params):
 			results.append(get_survey_data_row(i))
 			
 		total_pages = raw['total_pages']
-		print("Total Pages: {}").format(total_pages)
-		print("Total Count: {}").format(raw['total_count'])
+		print("Total Pages: {}".format(total_pages))
+		print("Total Count: {}".format(raw['total_count']))
 
 		for page in range(2,total_pages):
 			params['page'] = str(page)
