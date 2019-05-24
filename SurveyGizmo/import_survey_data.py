@@ -9,24 +9,12 @@ from dateutil import parser as dateparser
 from fs import open_fs
 from surveygizmo import SurveyGizmo, surveygizmo
 
-# Evil, but silence an annoying warning please
-import google.auth._default
-google.auth._default._warn_about_problematic_credentials = lambda *a, **k: None
-
 logging.basicConfig(
     format=
     "[%(asctime)s] %(levelname)s [%(filename)s.%(funcName)s:%(lineno)d] %(message)s",
     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-
-try:
-    import google.cloud.logging
-    # Instantiates a client
-    client = google.cloud.logging.Client()
-    client.setup_logging()
-except:
-    pass
 
 SURVEYGIZMO_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
