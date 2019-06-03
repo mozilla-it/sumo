@@ -1,6 +1,9 @@
 import json
 import requests
 import logging
+import math
+
+from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +40,26 @@ def get_answer(survey_data_row, question_num, default):
 # metadata (array of key-value pairs) 
 
 def get_question_data_row(row):
-	return [row['id'], row['content'].replace("\n", "\\n"), row['created'], row['creator']['username'],
+	return [row['id'], row['content'].replace("\n", "\\n"), row['created'], row['creator']['username'], row['updated'], row['updated_by'],
 			row.get('is_solved',False), row.get('locale',''), row.get('product',''), row.get('title',''), row.get('topic',''),
 			row.get('solution',''), row.get('solved_by',''), row.get('num_votes',0), row.get('num_votes_past_week',0),
-			row.get('last_answer',''), row.get('metadata',''), row.get('tags',''), row.get('answers','')
+			row.get('last_answer',''), row.get('metadata',''), row.get('tags',''), row.get('answers','') #, frt(row['created'], row.get('answers',''))
 			]
+
+# this assumes answers up to time T is always loaded first
+def frt(question_created_dt, answers_array):
+  question_created_dt = datetime.strptime(question_created_dt, '%Y-%m-%dT%H:%M:%SZ')
+  print(question_created_dt) #"2019-03-05T13:40:09Z"
+  frt = ''
+  if answers_array:
+    
+    # do i need to parse answers_array to list of answers?
+    print(str(len(answers_array)))
+    print(answers_array)
+    #for answer_id in answers_array:
+    
+  return str(frt)
+  
 
 def get_question_data(api_url_base, params):
 	api_url = '{0}?_method=GET'.format(api_url_base)
@@ -50,7 +68,7 @@ def get_question_data(api_url_base, params):
 	response = requests.get(api_url, params=params)
 
 	# need to get total_pages value and loop through to get all data &page=#
-	fields = ["question_id","question_content","created_date","creator_username",
+	fields = ["question_id","question_content","created_date","creator_username","updated","updated_by",
 			  "is_solved","locale", "product", "title", "topic", "solution", "solved_by",
 			  "num_votes","num_votes_past_week", "last_answer", "metadata_array", "tags_array", "answers"]
 
@@ -64,10 +82,16 @@ def get_question_data(api_url_base, params):
 
         #page=18464, next = null
 		print(raw['count'])
+		total_pages = math.ceil( raw['count'] / 20.0 )
+		print(total_pages)
 		
-		while raw['next'] is not None:
-		  print(raw['next'])
-		  response = requests.get(raw['next'])
+		#while raw['next'] is not None:
+		for page in range(2,total_pages):
+		  params['page'] = str(page)
+		  print(page)
+		  #print(raw['next'])
+		  response = requests.get(api_url, params=params)
+		  #response = requests.get(raw['next'])
 		  
 		  if response.status_code == 200:
 		    #logger.info('status code 200')
@@ -76,7 +100,7 @@ def get_question_data(api_url_base, params):
 		      results.append(get_question_data_row(i))
 		  else:
 		    print('[!] HTTP {0} calling [{1}]'.format(response.status_code, raw['next'])) # 401 unauthorized
-		    break
+		    #break
 
 		logger.info('returning results')
 		return results
@@ -113,10 +137,16 @@ def get_answer_data(api_url_base, params):
 		  results.append(get_answer_data_row(i))
 			
 		print(raw['count'])
+		total_pages = math.ceil( raw['count'] / 20.0 )
+		print(total_pages)
 		
-		while raw['next'] is not None:
-		  print(raw['next'])
-		  response = requests.get(raw['next'])
+		#while raw['next'] is not None:
+		for page in range(2,total_pages):
+		  params['page'] = str(page)
+		  print(page)
+		  #print(raw['next'])
+		  response = requests.get(api_url, params=params)
+		  #response = requests.get(raw['next'])
 		  
 		  if response.status_code == 200:
 		    #logger.info('status code 200')
@@ -125,7 +155,7 @@ def get_answer_data(api_url_base, params):
 		      results.append(get_answer_data_row(i))
 		  else:
 		    print('[!] HTTP {0} calling [{1}]'.format(response.status_code, raw['next'])) # 401 unauthorized
-		    break
+		    #break
 
 		logger.info('returning results')
 		return results
