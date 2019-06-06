@@ -2,8 +2,25 @@ import json
 import requests
 import base64
 import logging
+import pytz
+import datetime as dt
 
 logger = logging.getLogger(__name__)
+
+def convert_to_utc(dt_str):
+  fmt = '%Y-%m-%d %H:%M:%S'
+  ds, tzs = dt_str.rsplit(' ', 1)
+  eastern=pytz.timezone('US/Eastern')
+  dt_utc = dt.datetime.strptime(ds, fmt)
+  if tzs == 'EST':
+    date = dt.datetime.strptime(ds, fmt)
+    date_eastern=eastern.localize(date,is_dst=False)
+    date_utc=date_eastern.astimezone(pytz.utc)
+  elif tzs == 'EDT':
+    date = dt.datetime.strptime(ds, fmt)
+    date_eastern=eastern.localize(date,is_dst=True)
+    date_utc=date_eastern.astimezone(pytz.utc)
+  return dt_utc
 
 def get_answer(survey_data_row, question_num, default):
     try:
@@ -12,7 +29,7 @@ def get_answer(survey_data_row, question_num, default):
         return default
         
 def get_survey_data_row(row):
-	return [row['id'], row['date_started'], row['date_submitted'], row['status'],
+	return [row['id'], convert_to_utc(row['date_started']), convert_to_utc(row['date_submitted']), row['status'],
 			row['contact_id'], row['language'],
 			row['referer'], row['session_id'], row['user_agent'],
 			row['longitude'],
