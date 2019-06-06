@@ -10,6 +10,7 @@ from collections import Counter
 from nltk.corpus import stopwords
 
 import pandas as pd
+from datetime import datetime, timedelta, date, timedelta
 
 import google.cloud.logging
 # Instantiates a client
@@ -24,9 +25,13 @@ logger = logging.getLogger(__name__)
 
 from google.cloud import storage
 storage_client = storage.Client()
+sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
 from google.cloud import bigquery
 bq_client = bigquery.Client()
+dataset_name = 'sumo'
+dataset_ref = bq_client.dataset(dataset_name)
+
 
 emoticons_str = r"""
     (?:
@@ -72,16 +77,61 @@ def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
+def update_bq_table(uri, fn, table_name):
+
+  table_ref = dataset_ref.table(table_name)
+  job_config = bigquery.LoadJobConfig()
+  job_config.write_disposition = "WRITE_APPEND"
+  job_config.source_format = bigquery.SourceFormat.CSV
+  job_config.skip_leading_rows = 1
+  job_config.autodetect = True
+  
+  orig_rows =  bq_client.get_table(table_ref).num_rows
+
+  load_job = bq_client.load_table_from_uri(uri + fn, table_ref, job_config=job_config)  # API request
+  print("Starting job {}".format(load_job.job_id))
+
+  load_job.result()  # Waits for table load to complete.
+  destination_table = bq_client.get_table(table_ref)
+  print('Loaded {} rows into {}:{}.'.format(destination_table.num_rows-orig_rows, 'sumo', table_name))
+  
+  # move fn to processed folder
+  blob = sumo_bucket.blob("kitsune/" + fn)
+  new_blob = sumo_bucket.rename_blob(blob, "kitsune/processed/" + fn)
+  print('Blob {} has been renamed to {}'.format(blob.name, new_blob.name))
+
+
 def update_answers():
   start=datetime.now()
-  url = "https://support.mozilla.org/api/2/answer"
-  url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US'} #,'page': '50000'} #, 'results_per_page': '500'} up to 56297?
+  
+  end_dt = datetime.today().date() # + timedelta(1)
+  
+  qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_answers_raw")
+  query_job = bq_client.query(qry_max_date)
+  max_date_result = query_job.to_dataframe() 
+  max_date = pd.to_datetime(max_date_result['max_date'].values[0])
+  start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
+  print(start_dt)
 
-  with open("./kitsune_answers_all.csv", "w", encoding='utf8') as f:
+  assert start_dt <= end_dt,"Start Date >= End Date, no update needed."
+  
+  fn = "kitsune_answers_" + start_dt.strftime("%Y%m%d") + "_to_" + end_dt.strftime("%Y%m%d") + ".csv"
+  print(fn)
+  
+  url = "https://support.mozilla.org/api/2/answer"
+  #url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US'} #,'page': '50000'} #, 'results_per_page': '500'} up to 56297?
+  url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__gt': start_dt.strftime("%Y-%m-%d")} #,'page': '12000'} #, 'page': '18463'}
+
+  with open("/tmp/" + fn, "w", encoding='utf8') as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(Kitsune.get_answer_data(url, url_params))
-  # need to update answers max 2019-03-05 14:19:54 UTC ; min 2010-01-05 10:24:54 UTC
+  
+  blob = sumo_bucket.blob("kitsune/" + fn)
+  blob.upload_from_filename("/tmp/" + fn)
+
+  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_answers_raw')  
+  
   print(datetime.now()-start)
   
 def update_questions():
@@ -91,9 +141,24 @@ def update_questions():
   # total count 370727
   #updated__lt2011-01-01 32875
   #updated__lt=2010-12-31&updated__gt=2010-11-30
+  
+  end_dt = datetime.today().date() # + timedelta(1)
+  
+  qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_questions_raw")
+  query_job = bq_client.query(qry_max_date)
+  max_date_result = query_job.to_dataframe() 
+  max_date = pd.to_datetime(max_date_result['max_date'].values[0])
+  start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
+  print(start_dt)
+
+  assert start_dt <= end_dt,"Start Date >= End Date, no update needed."
+  
+  fn = "kitsune_questions_" + start_dt.strftime("%Y%m%d") + "_to_" + end_dt.strftime("%Y%m%d") + ".csv"
+  print(fn)
 
   url = "https://support.mozilla.org/api/2/question"
-  url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__lt': '2019-03-25', 'updated__gt': '2019-1-1'} #,'page': '12000'} #, 'page': '18463'}
+  url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__gt': start_dt.strftime("%Y-%m-%d")} #,'page': '12000'} #, 'page': '18463'}
+  #url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__lt': '2019-03-25', 'updated__gt': '2019-1-1'} #,'page': '12000'} #, 'page': '18463'}
   #url_params = {:format => "json",:product => "firefox", :locale => "en-US", :ordering => "+created", 'results_per_page': '500'}
 
   results = Kitsune.get_question_data(url, url_params)
@@ -103,21 +168,41 @@ def update_questions():
   #df = pd.DataFrame.from_records(results, columns=fields )
   #  df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
   #df.to_csv(fName, index=False)
-  with open("./kitsune_questions_20190101_to_20190325.csv", "w", encoding='utf8') as f:
+  with open("/tmp/" + fn, "w", encoding='utf8') as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(results)
-      
+
+  blob = sumo_bucket.blob("kitsune/" + fn)
+  blob.upload_from_filename("/tmp/" + fn)
+
+  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_questions_raw')  
+  
   print(datetime.now()-start)
 		
 		
-def analyze_word_freq(start_date, end_date):
+def analyze_word_freq():
   # munge questions by created date
   # note, does not account for case where question itself is updated (can that even happen?)
 
+  end_dt = datetime.today().date() # + timedelta(1)
+  
+  qry_max_date = ("""SELECT max(kitsune_dt) max_date FROM {0} """).format(dataset_name + ".kitsune_word_frequencies")
+  query_job = bq_client.query(qry_max_date)
+  max_date_result = query_job.to_dataframe() 
+  #max_date = pd.to_datetime(max_date_result['max_date'].values[0])
+  #start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
+  start_dt = max_date_result['max_date'].values[0]
+  print(start_dt)
+
+  assert start_dt <= end_dt,"Start Date >= End Date, no update needed."
+  
+  fn = 'kitsune_word_freq_' + start_dt.strftime('%Y%m%d') + "_to_" + end_dt.strftime('%Y%m%d') + '.csv'
+  print(fn)
+
   df = pd.DataFrame()
   
-  for dt in daterange(start_date, end_date):
+  for dt in daterange(start_dt, end_dt):
     #print single_date.strftime("%Y-%m-%d")
     next_day = dt + timedelta(days=1)
     #print(next_day)
@@ -157,7 +242,12 @@ def analyze_word_freq(start_date, end_date):
     
   df['kitsune_freq'] = df['kitsune_freq'].astype(int)
   print(df)
-  df.to_csv('kitsune_word_freq_' + start_date.strftime('%Y%m%d') + "_to_" + end_date.strftime('%Y%m%d') + '.csv', index=False)
+  df.to_csv("/tmp/" + fn, index=False)
+  
+  blob = sumo_bucket.blob("kitsune/" + fn)
+  blob.upload_from_filename("/tmp/" + fn)
+
+  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_word_frequencies')  
 
 
 def run():
@@ -171,11 +261,12 @@ def run():
   # ARGH annoying to do "except top 1" delete so do update on raw table, and have distinct id view
 
   # ALWAYS update answers first since questions depends on answers array
+  
   update_answers()
   
   update_questions()
   
-  analyze_word_freq(date(2019, 1, 1), date(2019, 3, 27))
+  analyze_word_freq()
 
 
 if __name__ == '__main__':
