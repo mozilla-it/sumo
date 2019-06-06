@@ -19,26 +19,12 @@ logger = logging.getLogger(__name__)
 from google.cloud import storage
 storage_client = storage.Client()
 
-def decode_base64(data, altchars=b'+/'):
-    """Decode base64, padding being optional.
-
-    :param data: Base64 data as an ASCII byte string
-    :returns: The decoded byte string.
-
-    """
-    data = re.sub(rb'[^a-zA-Z0-9%s]+' % altchars, b'', data)  # normalize
-    #data = str(data)
-    missing_padding = len(data) % 4
-    if missing_padding:
-        data += b'='* (4 - missing_padding)
-    return base64.b64decode(data, altchars).decode("utf-8")
-
 def main(outdir):
   
   start=datetime.now()
 
-  api_token = os.environ['SUMO_SURVEYGIZMO_TOKEN'] #decode_base64(os.environ['SUMO_SURVEYGIZMO_TOKEN'].rstrip().encode("utf-8"))
-  api_secret_key = os.environ['SUMO_SURVEYGIZMO_KEY'] #decode_base64(os.environ['SUMO_SURVEYGIZMO_KEY'].rstrip().encode("utf-8"))
+  api_token = os.environ['SUMO_SURVEYGIZMO_TOKEN'] 
+  api_secret_key = os.environ['SUMO_SURVEYGIZMO_KEY'] 
     
   survey_id = '4669267'
   results_per_page = '500' # takes about 30min to download all pages
@@ -54,6 +40,8 @@ def main(outdir):
   bucket = storage_client.get_bucket('moz-it-data-sumo')
   blob = bucket.blob('surveygizmo/csat_results.csv')
   blob.upload_from_filename("/tmp/csat_results.csv")
+
+  update_bq_table("gs://moz-it-data-sumo/surveygizmo/csat_results.csv", 'sumo', 'surveygizmo')
 
   print(datetime.now()-start)
 
