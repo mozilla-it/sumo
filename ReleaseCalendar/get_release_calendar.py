@@ -6,6 +6,8 @@ import logging
 import requests
 import math
 
+#import pandas as pd
+#import csv
 from datetime import timedelta, date, timedelta
 from google.cloud import bigquery
 
@@ -14,6 +16,7 @@ dataset_ref = bq_client.dataset('sumo')
 
 from google.cloud import storage
 storage_client = storage.Client()
+sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +24,7 @@ logger = logging.getLogger(__name__)
 base_url = "https://product-details.mozilla.org"
 
 
-def reload_bq_table(fn, table_name):
+def reload_bq_table(uri, fn, table_name):
 
   table_ref = dataset_ref.table(table_name)
   job_config = bigquery.LoadJobConfig()
@@ -30,18 +33,18 @@ def reload_bq_table(fn, table_name):
 
   job_config.skip_leading_rows = 1
   job_config.write_disposition = 'WRITE_TRUNCATE'
-  #job.field_delimiter = ','
-  #job_config.begin()
 
-  #job = client.load_table_from_storage(
-  #  'load-from-storage' + datetime.now().strftime('%Y%m%d%H%M'), table, gsbucket)
+  load_job = bq_client.load_table_from_uri(uri + fn, table_ref, job_config=job_config)  # API request
+  print("Starting job {}".format(load_job.job_id))
 
-  with open(fn, 'rb') as source_file:
-    job = bq_client.load_table_from_file(source_file,table_ref,location='US',job_config=job_config)  # API request
-
-  job.result()  # Waits for table load to complete.
-  # need to add some error check/handling if now all rows loaded
-  print('Loaded {} rows into {}:{}.'.format(job.output_rows, 'sumo', table_name))
+  load_job.result()  # Waits for table load to complete.
+  destination_table = bq_client.get_table(table_ref)
+  print('Loaded {} rows into {}:{}.'.format(destination_table.num_rows, 'sumo', table_name))
+  
+  # move fn to processed folder
+  blob = sumo_bucket.blob("release_calendar/" + fn)
+  new_blob = sumo_bucket.rename_blob(blob, "release_calendar/processed/" + fn)
+  print('Blob {} has been renamed to {}'.format(blob.name, new_blob.name))
 
 
 def daterange(start_date, end_date):
@@ -84,7 +87,8 @@ def get_release_calendar_row(release, row, weeks_out):
   #release_row = [release, row['product'], row['category'], row['build_number'], row['date'], row['version'],
   #        row.get('description',''), row.get('is_security_driven',False)]
   #return calc_durations(release_row, row['date'], 8)
-  print(results)
+  
+  #print(results)
   return results
 			
 
@@ -93,6 +97,7 @@ def update_release_calendar(url_version, product):
   start=datetime.now()
   
   weeks_out=8
+  fileout = "/tmp/release_calendar.csv"
   
   url = base_url + "/" + url_version + "/" + product + ".json"
   print(url)
@@ -114,20 +119,20 @@ def update_release_calendar(url_version, product):
       #print(i)
       #print(raw['releases'][i]['category'])
       results.append(get_release_calendar_row(i,raw['releases'][i],weeks_out))
-      # break
 		
     logger.info('returning results')
-    #print(results)
-    #return results
-      # with open(outdir + "/csat_results.csv", "w") as f:
-    with open("./release_calendar.csv", "w") as f:
+
+    with open(fileout, "w") as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
-      #writer.writerows(results)
       writer.writerows(fields)
       for it in results:
         writer.writerows(it)
-        
+
+    blob = sumo_bucket.blob("release_calendar/release_calendar.csv")
+    blob.upload_from_filename(fileout)
+    reload_bq_table("gs://moz-it-data-sumo/release_calendar/", "release_calendar.csv", 'release_calendar')  
+
   else:
     print('[!] HTTP {0} calling [{1}]'.format(response.status_code, api_url)) # 401 unauthorized
     #return None
@@ -138,5 +143,4 @@ def update_release_calendar(url_version, product):
 if __name__ == '__main__':
   url_version = "1.0" 
   product = "firefox"
-  #update_release_calendar(url_version, product)
-  reload_bq_table("./release_calendar.csv", 'release_calendar')
+  update_release_calendar(url_version, product)
