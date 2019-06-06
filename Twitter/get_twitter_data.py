@@ -50,21 +50,19 @@ def get_tweet_data_row(row):
 
 
 def get_firefox_mentions(api):
-  # uses search API standard which can only access last 7 days of data
+  # uses standard search API standard which can only access last 7 days of data
   # get data using sinceId to ensure no duplicates
 
   # If results from a specific ID onwards are reqd, set since_id to that ID.
   # else default to no lower limit, go as far back as API allows
-  sinceId = '1109129628969508866' #None
+  qry_max_id = ("""SELECT max(id_str) max_id FROM {0} """).format(dataset_name + ".twitter_mentions")
+  query_job = bq_client.query(qry_max_id)
+  max_id_result = query_job.to_dataframe() 
+  max_id = max_id_result['max_id'].values[0]
+  print(max_id)
 
-  # If results only below a specific ID are, set max_id to that ID.
-  # else default to no upper limit, start from the most recent tweet matching the search query.
-  max_id = -1 #1105671493646774272 #-1 
-  
   #searchQuery = '#someHashtag'  # this is what we're searching for
   maxTweets = 10000000 # Some arbitrary large number
-  #tweetsPerQry = 100  # this is the max the API permits
-  fName = 'twitter_data_mentions_since1109129628969508866_20190326.csv' # We'll store the tweets in a text file.
 
   tweetCount = 0
   print("Downloading max {0} tweets".format(maxTweets))
@@ -73,12 +71,11 @@ def get_firefox_mentions(api):
   results = []
   
   try: 
-    new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended", since_id=sinceId).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
-    #new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended").items()
-    #new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended", max_id=str(max_id - 1)).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
+    new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended", since_id=str(max_id)).items() 
+
     for tweet in new_tweets:
       tweet_row = get_tweet_data_row(tweet)
-      print(tweet.id_str)
+      #print(tweet.id_str)
       results.append(tweet_row) 
       
       tweetCount = tweetCount + 1
@@ -86,14 +83,22 @@ def get_firefox_mentions(api):
         break
     
     df = pd.DataFrame.from_records(results, columns=["id_str","created_at","full_text","user_id","in_reply_to_status_id_str"] )
-    #  df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
-    df.to_csv(fName, index=False)
+
+    min_id_str = df['id_str'].min()
+    max_id_str = df['id_str'].max()
+    print('min: ' + min_id_str + ', max: ' + max_id_str)
+    fn = 'twitter_data_mentions_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
+    df.to_csv("/tmp/" + fn, index=False)
+    print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
+    
+    blob = sumo_bucket.blob("twitter/" + fn)
+    blob.upload_from_filename("/tmp/" + fn)
+
+    update_bq_table("gs://moz-it-data-sumo/twitter/", fn, 'twitter_mentions')  
     
   except tweepy.TweepError as e:
     # Just exit if any error
     print("some error : " + str(e))
-
-  print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fName))
 
 
 def get_firefox_data(api):
@@ -105,17 +110,13 @@ def get_firefox_data(api):
 
   # If results only below a specific ID are, set max_id to that ID.
   # else default to no upper limit, start from the most recent tweet matching the search query.
-  #max_id = -1 #1020677537897295872 #-1 #1009174211082870784 #1009105878811922432 
   qry_max_id = ("""SELECT max(id_str) max_id FROM {0} """).format(dataset_name + ".twitter_reviews")
   query_job = bq_client.query(qry_max_id)
   max_id_result = query_job.to_dataframe() 
   max_id = max_id_result['max_id'].values[0]
   print(max_id)
   
-  #searchQuery = '#someHashtag'  # this is what we're searching for
   maxTweets = 10000000 # Some arbitrary large number
-  #tweetsPerQry = 100  # this is the max the API permits
-  #fName = 'twitter_data.csv' # We'll store the tweets in a text file.
 
   tweetCount = 0
   print("Downloading max {0} tweets".format(maxTweets))
