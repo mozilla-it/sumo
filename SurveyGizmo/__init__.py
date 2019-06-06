@@ -4,8 +4,27 @@ import base64
 import logging
 import pytz
 import datetime as dt
+from google.cloud import bigquery
+bq_client = bigquery.Client()
 
 logger = logging.getLogger(__name__)
+
+def update_bq_table(uri, dataset_name, table_name):
+
+  dataset_ref = bq_client.dataset(dataset_name)
+  table_ref = dataset_ref.table(table_name)
+  job_config = bigquery.LoadJobConfig()
+  job_config.write_disposition = "WRITE_TRUNCATE"
+  job_config.source_format = bigquery.SourceFormat.CSV
+  job_config.skip_leading_rows = 1
+  job_config.autodetect = True
+
+  load_job = client.load_table_from_uri(uri, table_ref, job_config=job_config)  # API request
+  print("Starting job {}".format(load_job.job_id))
+
+  load_job.result()  # Waits for table load to complete.
+  destination_table = client.get_table(table_ref)
+  print("Loaded {} rows.".format(destination_table.num_rows))
 
 def convert_to_utc(dt_str):
   fmt = '%Y-%m-%d %H:%M:%S'
