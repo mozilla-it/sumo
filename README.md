@@ -1,6 +1,6 @@
 ![SUMO logo](https://github.com/ophie200/sumo/blob/master/images/SUMO-logo.png)
 
-# SUMO Data Access
+## SUMO Data Access
 > Additional information or tagline
 
 Scripts to pull data from various sources for SUMO.
