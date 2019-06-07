@@ -2,7 +2,7 @@
 
 # SUMO Data Access
 
-Scripts to pull data from various sources for SUMO Dashboards and upload it to GCP.  Each data source runs independently.
+Scripts to pull data from various sources for SUMO Dashboards and upload it to GCP.  
 
 ## Datasource Overview
 
