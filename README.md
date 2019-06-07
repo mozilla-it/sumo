@@ -8,7 +8,9 @@ Scripts to pull data from various sources for SUMO Dashboards and upload it to G
 
 ### Google Analytics
 Uses Google Analytics Reporting API v4 to pull dimensions and metrics for the Google Analytics SUMO report.
+
 https://developers.google.com/analytics/devguides/reporting/core/v4/rest/
+
 A valid service account should be permissioned to pull data from the SUMO report from the Google Analytics side.
 GoogleAnalytics/create_ga_tables.py creates Google Analytics BiqQuery tables with schema definition.
 GoogleAnalytics/get_ga_data.py pulls data for a given range. The data is written to local csv files in /tmp folder, and pushed to google storage gs://<sumo-bucket>/googleanalytics/. The google storage files are uploaded to BigQuery dataset sumo table ga_*. After upload, the files are moved to the /processed subfolder.  Some of the data pulls hit daily data limits so it is recommend to run data pulls in one month chunks. 
