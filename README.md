@@ -1,9 +1,16 @@
 ![SUMO logo](https://github.com/ophie200/sumo/blob/master/images/SUMO-logo.png)
 
 # SUMO Data Access
-> Additional information or tagline
 
-Scripts to pull data from various sources for SUMO.
+Scripts to pull data from various sources for SUMO Dashboards and upload it to GCP.  Each data source runs independently.
+
+## Datasource Overview
+
+### Google Analytics
+Uses Google Analytics Reporting API v4 to pull dimensions and metrics for the Google Analytics SUMO report.
+https://developers.google.com/analytics/devguides/reporting/core/v4/rest/
+
+
 
 ## Installing / Getting started
 
