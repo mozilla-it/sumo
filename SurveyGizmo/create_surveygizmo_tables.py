@@ -3,26 +3,25 @@ from google.cloud import bigquery
 client = bigquery.Client()
 dataset_ref = client.dataset('sumo')
 
-			  
 def create_surveygizmo():
   schema = [
-    bigquery.SchemaField('Response ID', 'INTEGER', mode='NULLABLE'),
-    bigquery.SchemaField('Time Started', 'TIMESTAMP', mode='NULLABLE'),
-    bigquery.SchemaField('Date Submitted', 'TIMESTAMP', mode='NULLABLE'),
+    bigquery.SchemaField('Response_ID', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('Time_Started', 'TIMESTAMP', mode='NULLABLE'),
+    bigquery.SchemaField('Date_Submitted', 'TIMESTAMP', mode='NULLABLE'),
     bigquery.SchemaField('Status', 'STRING', mode='NULLABLE'),
-    bigquery.SchemaField('Contact ID', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('Contact_ID', 'INTEGER', mode='NULLABLE'),
     bigquery.SchemaField('Language', 'STRING', mode='NULLABLE'),
     bigquery.SchemaField('Referer', 'STRING', mode='NULLABLE'),
     bigquery.SchemaField('SessionID', 'STRING', mode='NULLABLE'),
-    bigquery.SchemaField('User Agent', 'STRING', mode='NULLABLE'),
+    bigquery.SchemaField('User_Agent', 'STRING', mode='NULLABLE'),
     bigquery.SchemaField('Longitude', 'FLOAT', mode='NULLABLE'),
     bigquery.SchemaField('Latitude', 'FLOAT', mode='NULLABLE'),
     bigquery.SchemaField('Country', 'STRING', mode='NULLABLE'),
     bigquery.SchemaField('City', 'STRING', mode='NULLABLE'),
-    bigquery.SchemaField('State/Region', 'STRING', mode='NULLABLE'),
+    bigquery.SchemaField('State_Region', 'STRING', mode='NULLABLE'),
     bigquery.SchemaField('Postal', 'STRING', mode='NULLABLE'),
-    bigquery.SchemaField('Did you accomplish the goal of your visit?', 'STRING', mode='NULLABLE'),
-    bigquery.SchemaField('How would you rate your experience with support.mozilla.org (Please help us by only rating the website and not Firefox)', 'STRING', mode='NULLABLE')
+    bigquery.SchemaField('Did_you_accomplish_the_goal_of_your_visit_', 'STRING', mode='NULLABLE'),
+    bigquery.SchemaField('How_would_you_rate_your_experience_with_support_mozilla_org__Please_help_us_by_only_rating_the_website_and_not_Firefox_', 'STRING', mode='NULLABLE')
   ]
   table_ref = dataset_ref.table('surveygizmo')
   table = bigquery.Table(table_ref, schema=schema)
