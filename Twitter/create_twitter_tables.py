@@ -19,7 +19,7 @@ def create_twitter_mentions():
   assert table.table_id == 'twitter_mentions'
 
   
-def create_reviews():
+def create_twitter_reviews():
   schema = [
     bigquery.SchemaField('id_str', 'INTEGER', mode='NULLABLE'),
     bigquery.SchemaField('created_at', 'TIMESTAMP', mode='NULLABLE'),
@@ -27,7 +27,7 @@ def create_reviews():
     bigquery.SchemaField('user_id', 'INTEGER', mode='NULLABLE'),
     bigquery.SchemaField('in_reply_to_status_id_str', 'INTEGER', mode='NULLABLE'),
     bigquery.SchemaField('in_reply_to_status_text', 'STRING', mode='NULLABLE'),
-    bigquery.SchemaField('in_reply_to_status_created_at', 'TIMESTAMP', mode='NULLABLE')
+    bigquery.SchemaField('in_reply_to_status_created_at', 'TIMESTAMP', mode='NULLABLE'),
     bigquery.SchemaField('in_reply_to_status_user_id', 'INTEGER', mode='NULLABLE')
   ]
   table_ref = dataset_ref.table('twitter_reviews')
