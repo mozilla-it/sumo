@@ -73,8 +73,8 @@ def create_kitsune_word_frequencies():
 
 def main():
 
-  #create_kitsune_answers()
-  #create_kitsune_questions()
+  create_kitsune_answers()
+  create_kitsune_questions()
   create_kitsune_word_frequencies()
 
 
