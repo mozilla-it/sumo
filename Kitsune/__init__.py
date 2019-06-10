@@ -3,7 +3,7 @@ import requests
 import logging
 import math
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 

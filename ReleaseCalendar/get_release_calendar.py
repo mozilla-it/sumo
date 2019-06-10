@@ -139,8 +139,10 @@ def update_release_calendar(url_version, product):
       
   print(datetime.now()-start)
 
-
-if __name__ == '__main__':
+def main():
   url_version = "1.0" 
   product = "firefox"
   update_release_calendar(url_version, product)
+
+if __name__ == '__main__':
+    main()

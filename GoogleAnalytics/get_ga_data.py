@@ -1,4 +1,5 @@
-from google.oauth2.service_account import Credentials
+#from google.oauth2.service_account import Credentials
+from oauth2client.client import GoogleCredentials
 from googleapiclient.discovery import build
 
 import argparse
@@ -38,7 +39,8 @@ def initialize_analyticsreporting():
   # Build the service object.
   #analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
-  credentials = Credentials.from_service_account_file(KEY_FILE_LOCATION, scopes=SCOPES)
+  #credentials = Credentials.from_service_account_file(KEY_FILE_LOCATION, scopes=SCOPES)
+  credentials = GoogleCredentials.get_application_default()
   analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
   return analytics
@@ -521,9 +523,13 @@ def update_bq_table(uri, fn, table_name):
   print('Blob {} has been renamed to {}'.format(blob.name, new_blob.name))
 
     
-def main(start_date, end_date):
+def main(start_date=None, end_date=None):
   #start_date = date(2019, 4, 1) # inclusive
   #end_date = date(2019, 5, 1) # exclusive
+
+  if start_date is None:
+    start_date = date(2019, 3, 1) # inclusive
+    end_date = datetime.today().date() # exclusive
 
   analytics = initialize_analyticsreporting()
   
@@ -540,8 +546,6 @@ def main(start_date, end_date):
   run_questions_exit_rate(analytics, start_date, end_date)
 
   run_search_ctr(analytics, start_date, end_date)
-
-  
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="SUMO Google Analytics main arguments")

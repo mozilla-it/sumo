@@ -12,6 +12,11 @@ from nltk.corpus import stopwords
 import pandas as pd
 from datetime import datetime, timedelta, date, timedelta
 
+antivirus_content = ['ahnlab','avast','avg','avira','bitdefender','clamwin','comodo','defender',
+                     'drweb','f-secure','f-prot','g data','forticlient','immunet','kaspersky','mcafee',
+                     'nod32','norton','panda','quick heal','secureanywhere','sophos','titanium',
+                     'trustport','webroot','windows defender']
+
 import google.cloud.logging
 # Instantiates a client
 client = google.cloud.logging.Client()
@@ -57,10 +62,10 @@ tokens_re = re.compile(r'('+'|'.join(regex_str)+')', re.VERBOSE | re.IGNORECASE)
 emoticon_re = re.compile(r'^'+emoticons_str+'$', re.VERBOSE | re.IGNORECASE)
 
 # read antivirus_keywords.txt to list
-with open('./antivirus_keywords.txt') as f:
-  antivirus_words = f.readlines()
-  #remove whitespace characters like `\n` at the end of each line
-  antivirus_content = [x.strip() for x in antivirus_words] 
+#with open('gs://moz-it-data-sumo/ref/antivirus_keywords.txt') as f:
+#  antivirus_words = f.readlines()
+#  #remove whitespace characters like `\n` at the end of each line
+#  antivirus_content = [x.strip() for x in antivirus_words] 
  
 def tokenize(s):
     return tokens_re.findall(s)
@@ -250,7 +255,7 @@ def analyze_word_freq():
   update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_word_frequencies')  
 
 
-def run():
+def main():
 
   # use next to iterate to next page url
   #"https://support.mozilla.org/api/2/question/?_method=GET&locale=en-US&page=2&product=firefox"
@@ -270,4 +275,4 @@ def run():
 
 
 if __name__ == '__main__':
-	run()
+	main()
