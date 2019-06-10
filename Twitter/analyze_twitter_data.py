@@ -143,7 +143,10 @@ if __name__ == '__main__':
   qry_max_dt = ("""SELECT max(tweet_dt) max_dt FROM {0} """).format(dataset_name + ".twitter_word_frequencies")
   query_job = bq_client.query(qry_max_dt)
   max_dt_result = query_job.to_dataframe() 
-  start_dt = max_dt_result['max_dt'].values[0]
+  try:
+    start_dt = max_dt_result['max_dt'].values[0]
+  except:
+    start_dt = datetime(2019, 3, 23) # inclusive
   print(start_dt)
   
   #print(content)
