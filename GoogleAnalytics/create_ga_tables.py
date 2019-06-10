@@ -71,20 +71,6 @@ def create_ga_questions_exit_rate():
   table = client.create_table(table)  # API request
 
   assert table.table_id == 'ga_questions_exit_rate'
-  
-def create_ga_questions_exit_rate():
-  schema = [
-    bigquery.SchemaField('ga_date', 'DATE', mode='NULLABLE'),
-    bigquery.SchemaField('ga_exitPagePath', 'STRING', mode='NULLABLE'),
-    bigquery.SchemaField('ga_exitRate', 'FLOAT', mode='NULLABLE'),
-    bigquery.SchemaField('ga_exits', 'INTEGER', mode='NULLABLE'),
-    bigquery.SchemaField('ga_pageviews', 'INTEGER', mode='NULLABLE')
-  ]
-  table_ref = dataset_ref.table('ga_questions_exit_rate')
-  table = bigquery.Table(table_ref, schema=schema)
-  table = client.create_table(table)  # API request
-
-  assert table.table_id == 'ga_questions_exit_rate'
 
 
 def create_ga_search_ctr():
