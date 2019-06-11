@@ -89,7 +89,7 @@ def get_firefox_mentions(api):
     max_id_str = df['id_str'].max()
     print('min: ' + min_id_str + ', max: ' + max_id_str)
     fn = 'twitter_data_mentions_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
-    df.to_csv("/tmp/" + fn, index=False)
+    df.to_csv("/tmp/" + fn, index=False, encoding='utf-8')
     print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
     
     blob = sumo_bucket.blob("twitter/" + fn)
