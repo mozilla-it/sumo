@@ -3,7 +3,7 @@ from datetime import datetime
 import csv
 import json
 import base64
-import os, re, argparse
+import io,os, re, argparse
 
 import google.cloud.logging
 # Instantiates a client
@@ -39,7 +39,7 @@ def main():
 
   params = {'resultsperpage': results_per_page, 'api_token': api_token, 'api_secret_key': api_secret_key, 'page': str(1)}
 
-  with open("/tmp/csat_results.csv", "w", encoding='utf8') as f:
+  with io.open("/tmp/csat_results.csv", "w", encoding='utf8') as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
