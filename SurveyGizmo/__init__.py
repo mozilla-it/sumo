@@ -30,16 +30,20 @@ def convert_to_utc(dt_str):
   fmt = '%Y-%m-%d %H:%M:%S'
   ds, tzs = dt_str.rsplit(' ', 1)
   eastern=pytz.timezone('US/Eastern')
-  dt_utc = dt.datetime.strptime(ds, fmt)
-  if tzs == 'EST':
-    date = dt.datetime.strptime(ds, fmt)
-    date_eastern=eastern.localize(date,is_dst=False)
-    date_utc=date_eastern.astimezone(pytz.utc)
-  elif tzs == 'EDT':
-    date = dt.datetime.strptime(ds, fmt)
-    date_eastern=eastern.localize(date,is_dst=True)
-    date_utc=date_eastern.astimezone(pytz.utc)
-  return dt_utc
+  try:
+    dt_utc = dt.datetime.strptime(ds, fmt)
+    if tzs == 'EST':
+      date = dt.datetime.strptime(ds, fmt)
+      date_eastern=eastern.localize(date,is_dst=False)
+      date_utc=date_eastern.astimezone(pytz.utc)
+    elif tzs == 'EDT':
+      date = dt.datetime.strptime(ds, fmt)
+      date_eastern=eastern.localize(date,is_dst=True)
+      date_utc=date_eastern.astimezone(pytz.utc)
+    return dt_utc
+  except ValueError:
+    logging.info("ValueError:" + dt_str)
+    raise
 
 def get_answer(survey_data_row, question_num, default):
     try:
@@ -48,13 +52,18 @@ def get_answer(survey_data_row, question_num, default):
         return default
         
 def get_survey_data_row(row):
-	return [row['id'], convert_to_utc(row['date_started']), convert_to_utc(row['date_submitted']), row['status'],
-			row['contact_id'], row['language'],
-			row['referer'], row['session_id'], row['user_agent'],
-			row['longitude'],
-			row['latitude'], row['country'], row['city'], row['region'], row['postal'],
-			get_answer(row['survey_data'], str(2), ''),
-			get_answer(row['survey_data'], str(4), '')]
+    try:
+      dt_started = convert_to_utc(row['date_started'])
+      dt_submitted = convert_to_utc(row['date_submitted'])
+      return [row['id'], dt_started, dt_submitted, row['status'],
+              row['contact_id'], row['language'],
+              row['referer'], row['session_id'], row['user_agent'],
+              row['longitude'],
+              row['latitude'], row['country'], row['city'], row['region'], row['postal'],
+              get_answer(row['survey_data'], str(2), ''),
+              get_answer(row['survey_data'], str(4), '')]
+    except ValueError:
+      logging.info("empty get_survey_data_row")
 
 def get_survey_data(api_url_base, params):
 	api_url = '{0}?_method=GET'.format(api_url_base)
@@ -99,7 +108,9 @@ def get_survey_data(api_url_base, params):
 				
 				raw = response.json()
 				for i in raw['data']:
-					results.append(get_survey_data_row(i))
+				    data_row =get_survey_data_row(i)
+				    if data_row:
+				      results.append(data_row)
 
 			else:
 				print('[!] HTTP {0} calling [{1}]'.format(response.status_code, api_url)) # 401 unauthorized
