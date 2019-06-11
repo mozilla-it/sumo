@@ -2,7 +2,7 @@ from datetime import datetime, date, timedelta
 import json
 import requests
 import csv
-import os, re, argparse
+import os, io, re, argparse
 import Kitsune
 
 from nltk.tokenize import word_tokenize
@@ -129,7 +129,7 @@ def update_answers():
   #url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US'} #,'page': '50000'} #, 'results_per_page': '500'} up to 56297?
   url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__gt': start_dt.strftime("%Y-%m-%d")} #,'page': '12000'} #, 'page': '18463'}
 
-  with open("/tmp/" + fn, "w", encoding='utf8') as f:
+  with io.open("/tmp/" + fn, "w", encoding='utf8') as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(Kitsune.get_answer_data(url, url_params))
