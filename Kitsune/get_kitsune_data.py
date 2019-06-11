@@ -109,7 +109,7 @@ def update_bq_table(uri, fn, table_name):
 def update_answers():
   start=datetime.now()
   
-  start_dt = datetime(2010, 5, 1)
+  start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
   qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_answers_raw")
@@ -149,7 +149,7 @@ def update_questions():
   #updated__lt2011-01-01 32875
   #updated__lt=2010-12-31&updated__gt=2010-11-30
 
-  start_dt = datetime(2010, 5, 1)
+  start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
   qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_questions_raw")
@@ -194,15 +194,15 @@ def analyze_word_freq():
   # munge questions by created date
   # note, does not account for case where question itself is updated (can that even happen?)
 
-  start_dt = datetime(2010, 5, 1)
+  start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
   qry_max_date = ("""SELECT max(kitsune_dt) max_date FROM {0} """).format(dataset_name + ".kitsune_word_frequencies")
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() 
-  #max_date = pd.to_datetime(max_date_result['max_date'].values[0])
+  max_date = pd.to_datetime(max_date_result['max_date'].values[0])
   #start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
-  max_date = max_date_result['max_date'].values[0]
+  #max_date = max_date_result['max_date'].values[0]
   if max_date is not None:
     start_dt = max_date
   print(start_dt)
