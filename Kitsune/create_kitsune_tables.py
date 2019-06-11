@@ -1,7 +1,7 @@
 # BQ table empty creation and schema defintions for GA tables
 from google.cloud import bigquery
 client = bigquery.Client()
-dataset_ref = client.dataset('analyse_and_tal')
+dataset_ref = client.dataset('sumo')
 
 
 #"answer_id","question_id","answer_content","created_date","creator_username",
