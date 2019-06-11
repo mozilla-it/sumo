@@ -137,7 +137,7 @@ def get_answer_data(api_url_base, params):
 		  results.append(get_answer_data_row(i))
 			
 		print(raw['count'])
-		total_pages = math.ceil( raw['count'] / 20.0 )
+		total_pages = int(math.ceil( raw['count'] / 20.0 ))
 		print(total_pages)
 		
 		#while raw['next'] is not None:
