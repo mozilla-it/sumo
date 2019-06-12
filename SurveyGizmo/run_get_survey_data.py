@@ -22,11 +22,14 @@ storage_client = storage.Client()
 def main():
   parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
   parser.add_argument('--outdir', nargs='?', const='.', type=str, help='file output directory')
+  parser.add_argument('--bucket', nargs='?', const='.', type=str, help='which gs bucket to use')
   args = parser.parse_args()
 
   outdir = args.outdir
+  bucket = args.bucket
 
-  print(outdir)
+  print("Outdir: ", outdir)
+  print("Bucket: ", bucket)
 
   start=datetime.now()
 
@@ -44,11 +47,11 @@ def main():
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
   
-  bucket = storage_client.get_bucket('moz-it-data-sumo')
+  bucket = storage_client.get_bucket(bucket)
   blob = bucket.blob('surveygizmo/csat_results.csv')
   blob.upload_from_filename("/tmp/csat_results.csv")
 
-  SurveyGizmo.update_bq_table("gs://moz-it-data-sumo/surveygizmo/csat_results.csv", 'sumo', 'surveygizmo')
+  SurveyGizmo.update_bq_table("gs://{}/surveygizmo/csat_results.csv".format(bucket), 'sumo', 'surveygizmo')
 
   print(datetime.now()-start)
 
