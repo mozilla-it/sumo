@@ -19,11 +19,11 @@ def update_bq_table(uri, dataset_name, table_name):
   job_config.skip_leading_rows = 1
   job_config.autodetect = True
 
-  load_job = client.load_table_from_uri(uri, table_ref, job_config=job_config)  # API request
+  load_job = bq_client.load_table_from_uri(uri, table_ref, job_config=job_config)  # API request
   print("Starting job {}".format(load_job.job_id))
 
   load_job.result()  # Waits for table load to complete.
-  destination_table = client.get_table(table_ref)
+  destination_table = bq_client.get_table(table_ref)
   print("Loaded {} rows.".format(destination_table.num_rows))
 
 def convert_to_utc(dt_str):
