@@ -48,7 +48,7 @@ def main():
   blob = bucket.blob('surveygizmo/csat_results.csv')
   blob.upload_from_filename("/tmp/csat_results.csv")
 
-  update_bq_table("gs://moz-it-data-sumo/surveygizmo/csat_results.csv", 'sumo', 'surveygizmo')
+  SurveyGizmo.update_bq_table("gs://moz-it-data-sumo/surveygizmo/csat_results.csv", 'sumo', 'surveygizmo')
 
   print(datetime.now()-start)
 
