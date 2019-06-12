@@ -28,9 +28,11 @@ import logging
 logging.info('start logging')
 logger = logging.getLogger(__name__)
 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+
 from google.cloud import storage
 storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
+sumo_bucket = storage_client.get_bucket(bucket)
 
 from google.cloud import bigquery
 bq_client = bigquery.Client()
@@ -62,7 +64,7 @@ tokens_re = re.compile(r'('+'|'.join(regex_str)+')', re.VERBOSE | re.IGNORECASE)
 emoticon_re = re.compile(r'^'+emoticons_str+'$', re.VERBOSE | re.IGNORECASE)
 
 # read antivirus_keywords.txt to list
-#with open('gs://moz-it-data-sumo/ref/antivirus_keywords.txt') as f:
+#with open('gs://oz-it-data-sumo/ref/antivirus_keywords.txt') as f:
 #  antivirus_words = f.readlines()
 #  #remove whitespace characters like `\n` at the end of each line
 #  antivirus_content = [x.strip() for x in antivirus_words] 
@@ -137,7 +139,7 @@ def update_answers():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_answers_raw')  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_answers_raw')  
   
   print(datetime.now()-start)
   
@@ -185,7 +187,7 @@ def update_questions():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_questions_raw')  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_questions_raw')  
   
   print(datetime.now()-start)
 		
@@ -259,7 +261,7 @@ def analyze_word_freq():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_word_frequencies')  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_word_frequencies')  
 
 
 def main():

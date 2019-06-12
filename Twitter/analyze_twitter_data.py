@@ -13,9 +13,11 @@ bq_client = bigquery.Client()
 dataset_name = 'sumo'
 dataset_ref = bq_client.dataset(dataset_name)
 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+
 from google.cloud import storage
 storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
+sumo_bucket = storage_client.get_bucket(bucket)
 
 
 emoticons_str = r"""
@@ -42,9 +44,9 @@ tokens_re = re.compile(r'('+'|'.join(regex_str)+')', re.VERBOSE | re.IGNORECASE)
 emoticon_re = re.compile(r'^'+emoticons_str+'$', re.VERBOSE | re.IGNORECASE)
  
 # read antivirus_keywords.txt to list
-##with open('gs://moz-it-data-sumo/ref/antivirus_keywords.txt') as f:
+##with open('gs://mz-it-data-sumo/ref/antivirus_keywords.txt') as f:
 ##  antivirus_words = f.readlines()
-content = pd.read_csv('gs://moz-it-data-sumo/ref/antivirus_keywords.txt')
+content = pd.read_csv('gs://{}/ref/antivirus_keywords.txt'.format(bucket))
 #print(antivirus_words)
 #remove whitespace characters like `\n` at the end of each line
 #content = [x.strip() for x in antivirus_words] 
@@ -133,7 +135,7 @@ def munge_data(dt, ignore_list):
     blob = sumo_bucket.blob("twitter/" + fn)
     blob.upload_from_filename("/tmp/" + fn)
 
-    update_bq_table("gs://moz-it-data-sumo/twitter/", fn, 'twitter_word_frequencies')  
+    update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_word_frequencies')  
 
   
 if __name__ == '__main__':

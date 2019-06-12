@@ -13,10 +13,12 @@ dataset_ref = bq_client.dataset(dataset_name)
 
 from google.cloud import storage
 storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
 consumer_key = os.environ['SUMO_TWITTER_CONSUMER_KEY'] 
 consumer_secret = os.environ['SUMO_TWITTER_CONSUMER_SECRET'] 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+
+sumo_bucket = storage_client.get_bucket(bucket)
 
 def update_bq_table(uri, fn, table_name):
 
@@ -95,7 +97,7 @@ def get_firefox_mentions(api):
     blob = sumo_bucket.blob("twitter/" + fn)
     blob.upload_from_filename("/tmp/" + fn)
 
-    update_bq_table("gs://moz-it-data-sumo/twitter/", fn, 'twitter_mentions')  
+    update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_mentions')  
     
   except tweepy.TweepError as e:
     # Just exit if any error
@@ -164,7 +166,7 @@ def get_firefox_data(api):
     blob = sumo_bucket.blob("twitter/" + fn)
     blob.upload_from_filename("/tmp/" + fn)
 
-    update_bq_table("gs://moz-it-data-sumo/twitter/", fn, 'twitter_reviews')  
+    update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_reviews')  
     
   except tweepy.TweepError as e:
     # Just exit if any error
