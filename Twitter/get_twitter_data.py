@@ -107,7 +107,7 @@ def get_firefox_mentions(api):
     print("some error : " + str(e))
 
 
-def get_firefox_data(api):
+def get_firefox_reviews(api):
   #get all tweets with id=firefox
 
   # If results from a specific ID onwards are reqd, set since_id to that ID.
@@ -194,6 +194,19 @@ def get_firefox_data(api):
 
 
 def main():
+  
+  # declare global variables and update with arguments
+  global bucket
+  global sumo_bucket
+
+  parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
+  parser.add_argument('--bucket', nargs='?', const='.', type=str, help='which gs bucket to use')
+  args = parser.parse_args()
+  bucket = args.bucket
+  print("Bucket: ", bucket)	
+
+  sumo_bucket = storage_client.get_bucket(bucket)
+
   # OAuth process, using the keys and tokens
   #auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
   auth = tweepy.AppAuthHandler(consumer_key, consumer_secret) # appplication handler has higher limits
@@ -205,7 +218,7 @@ def main():
     print ("Can't Authenticate")
     sys.exit(-1)
 
-  get_firefox_data(api)
+  get_firefox_reviews(api)
   get_firefox_mentions(api)
   
   
