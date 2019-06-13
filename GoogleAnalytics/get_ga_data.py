@@ -41,6 +41,7 @@ def initialize_analyticsreporting():
 
   #credentials = Credentials.from_service_account_file(KEY_FILE_LOCATION, scopes=SCOPES)
   credentials = GoogleCredentials.get_application_default()
+  credentials = credentials.create_scoped(SCOPES)
   analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
   return analytics
