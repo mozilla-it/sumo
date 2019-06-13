@@ -1,14 +1,35 @@
 ![SUMO logo](https://github.com/ophie200/sumo/blob/master/images/SUMO-logo.png)
 
 # SUMO Data Access
-> Additional information or tagline
 
-Scripts to pull data from various sources for SUMO.
+Scripts to pull data from various sources for SUMO Dashboards and upload it to GCP.  
+
+## Datasource Overview
+
+### Google Analytics
+Uses Google Analytics Reporting API v4 to pull dimensions and metrics for the Google Analytics SUMO report.
+
+https://developers.google.com/analytics/devguides/reporting/core/v4/rest/
+
+A valid service account should be permissioned to pull data from the SUMO report from the Google Analytics side.
+GoogleAnalytics/create_ga_tables.py creates Google Analytics BiqQuery tables with schema definition.
+GoogleAnalytics/get_ga_data.py pulls data for a given range. The data is written to local csv files in /tmp folder, and pushed to google storage gs://<sumo-bucket>/googleanalytics/. The google storage files are uploaded to BigQuery dataset sumo table ga_*. After upload, the files are moved to the /processed subfolder.  Some of the data pulls hit daily data limits so it is recommend to run data pulls in one month chunks. 
+
 
 ## Installing / Getting started
 
-A quick introduction of the minimal setup you need to get a hello world up &
-running.
+The scripts are intended to be run on a Google Cloud Project with necessary account permissions. 
+
+Assumes Google storage folder structure:
+```shell
+gs:// <sumo-bucket>  
+    / googleanalytics => where google analytics data files are initially placed
+    / googleanalytics / processed => where processed google analytics data files are placed after being uploaded to BigQuery
+    / googleplaystore => where google  data files are initially placed [deprecated]
+    / googleplaystore / processed => where processed google analytics data files are placed after being uploaded to BigQuery [deprecated]
+    / tmp => model param files, aggregation files in subfolder by model pararm
+gs:// <data-bucket> => location of parquet input data files
+```
 
 ```shell
 packagemanager install awesome-project

@@ -19,8 +19,18 @@ logger = logging.getLogger(__name__)
 from google.cloud import storage
 storage_client = storage.Client()
 
-def main(outdir):
-  
+def main():
+  parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
+  parser.add_argument('--outdir', nargs='?', const='.', type=str, help='file output directory')
+  parser.add_argument('--bucket', nargs='?', const='.', type=str, help='which gs bucket to use')
+  args = parser.parse_args()
+
+  outdir = args.outdir
+  bucket = args.bucket
+
+  print("Outdir: ", outdir)
+  print("Bucket: ", bucket)
+
   start=datetime.now()
 
   api_token = os.environ['SUMO_SURVEYGIZMO_TOKEN'] 
@@ -37,18 +47,13 @@ def main(outdir):
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
   
-  bucket = storage_client.get_bucket('moz-it-data-sumo')
+  bucket = storage_client.get_bucket(bucket)
   blob = bucket.blob('surveygizmo/csat_results.csv')
   blob.upload_from_filename("/tmp/csat_results.csv")
 
-  update_bq_table("gs://moz-it-data-sumo/surveygizmo/csat_results.csv", 'sumo', 'surveygizmo')
+  SurveyGizmo.update_bq_table("gs://{}/surveygizmo/csat_results.csv".format(bucket), 'sumo', 'surveygizmo')
 
   print(datetime.now()-start)
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
-  parser.add_argument('--outdir', nargs='?', const='.', type=str, help='file output directory')
-  args = parser.parse_args()
-  
-  print(args.outdir)
-  main(args.outdir)
+  main()

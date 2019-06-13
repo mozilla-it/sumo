@@ -12,6 +12,11 @@ from nltk.corpus import stopwords
 import pandas as pd
 from datetime import datetime, timedelta, date, timedelta
 
+antivirus_content = ['ahnlab','avast','avg','avira','bitdefender','clamwin','comodo','defender',
+                     'drweb','f-secure','f-prot','g data','forticlient','immunet','kaspersky','mcafee',
+                     'nod32','norton','panda','quick heal','secureanywhere','sophos','titanium',
+                     'trustport','webroot','windows defender']
+
 import google.cloud.logging
 # Instantiates a client
 client = google.cloud.logging.Client()
@@ -23,9 +28,11 @@ import logging
 logging.info('start logging')
 logger = logging.getLogger(__name__)
 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+
 from google.cloud import storage
 storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
+sumo_bucket = storage_client.get_bucket(bucket)
 
 from google.cloud import bigquery
 bq_client = bigquery.Client()
@@ -57,10 +64,10 @@ tokens_re = re.compile(r'('+'|'.join(regex_str)+')', re.VERBOSE | re.IGNORECASE)
 emoticon_re = re.compile(r'^'+emoticons_str+'$', re.VERBOSE | re.IGNORECASE)
 
 # read antivirus_keywords.txt to list
-with open('./antivirus_keywords.txt') as f:
-  antivirus_words = f.readlines()
-  #remove whitespace characters like `\n` at the end of each line
-  antivirus_content = [x.strip() for x in antivirus_words] 
+#with open('gs://oz-it-data-sumo/ref/antivirus_keywords.txt') as f:
+#  antivirus_words = f.readlines()
+#  #remove whitespace characters like `\n` at the end of each line
+#  antivirus_content = [x.strip() for x in antivirus_words] 
  
 def tokenize(s):
     return tokens_re.findall(s)
@@ -104,13 +111,15 @@ def update_bq_table(uri, fn, table_name):
 def update_answers():
   start=datetime.now()
   
+  start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
   qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_answers_raw")
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() 
   max_date = pd.to_datetime(max_date_result['max_date'].values[0])
-  start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
+  if max_date is not None:
+    start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
   print(start_dt)
 
   assert start_dt <= end_dt,"Start Date >= End Date, no update needed."
@@ -130,7 +139,7 @@ def update_answers():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_answers_raw')  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_answers_raw')  
   
   print(datetime.now()-start)
   
@@ -141,14 +150,16 @@ def update_questions():
   # total count 370727
   #updated__lt2011-01-01 32875
   #updated__lt=2010-12-31&updated__gt=2010-11-30
-  
+
+  start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
   qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_questions_raw")
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() 
   max_date = pd.to_datetime(max_date_result['max_date'].values[0])
-  start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
+  if max_date is not None:
+    start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
   print(start_dt)
 
   assert start_dt <= end_dt,"Start Date >= End Date, no update needed."
@@ -176,7 +187,7 @@ def update_questions():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_questions_raw')  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_questions_raw')  
   
   print(datetime.now()-start)
 		
@@ -185,14 +196,17 @@ def analyze_word_freq():
   # munge questions by created date
   # note, does not account for case where question itself is updated (can that even happen?)
 
+  start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
   qry_max_date = ("""SELECT max(kitsune_dt) max_date FROM {0} """).format(dataset_name + ".kitsune_word_frequencies")
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() 
-  #max_date = pd.to_datetime(max_date_result['max_date'].values[0])
+  max_date = pd.to_datetime(max_date_result['max_date'].values[0])
   #start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
-  start_dt = max_date_result['max_date'].values[0]
+  #max_date = max_date_result['max_date'].values[0]
+  if max_date is not None:
+    start_dt = max_date
   print(start_dt)
 
   assert start_dt <= end_dt,"Start Date >= End Date, no update needed."
@@ -247,10 +261,10 @@ def analyze_word_freq():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/kitsune/", fn, 'kitsune_word_frequencies')  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_word_frequencies')  
 
 
-def run():
+def main():
 
   # use next to iterate to next page url
   #"https://support.mozilla.org/api/2/question/?_method=GET&locale=en-US&page=2&product=firefox"
@@ -270,4 +284,4 @@ def run():
 
 
 if __name__ == '__main__':
-	run()
+	main()

@@ -101,9 +101,9 @@ def create_kitsune_driving_sentiment():
 
 def main():
 
-  #create_kitsune_answers()
-  #create_kitsune_questions()
-  #create_kitsune_word_frequencies()
+  create_kitsune_answers()
+  create_kitsune_questions()
+  create_kitsune_word_frequencies()
   create_kitsune_sentiment()
   create_kitsune_driving_sentiment()
 
