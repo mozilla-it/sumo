@@ -275,12 +275,14 @@ def main():
   # ARGH annoying to do "except top 1" delete so do update on raw table, and have distinct id view
 
   # ALWAYS update answers first since questions depends on answers array
+
+  print("bucket value: " + bucket)
   
-  update_answers()
+  #update_answers()
   
-  update_questions()
+  #update_questions()
   
-  analyze_word_freq()
+  #analyze_word_freq()
 
 
 if __name__ == '__main__':
