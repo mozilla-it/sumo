@@ -14,7 +14,12 @@ def create_twitter_sentiment():
                            description='''Contains a simple to understand aggregate score 
                                        of the sentiment such as positive or negative, based 
                                       on the score and magnitude'''),
-      bigquery.SchemaField('topic', 'STRING', mode='NULLABLE')
+      bigquery.SchemaField(
+        'topics', 
+        'RECORD', 
+        mode='REPEATED',
+        fields = [bigquery.SchemaField("topic", "STRING", mode="NULLABLE")]
+        )
   ]
   table_ref = dataset_ref.table('twitter_sentiment')
   table = bigquery.Table(table_ref, schema=schema)
