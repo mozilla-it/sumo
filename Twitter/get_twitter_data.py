@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 import csv
-import os
+import os, re, argparse
 
 from google.cloud import bigquery
 bq_client = bigquery.Client()
