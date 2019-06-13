@@ -74,7 +74,10 @@ def get_firefox_mentions(api):
   results = []
   
   try: 
-    new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended", since_id=str(max_id)).items() 
+    if max_id is not None:
+      new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended", since_id=str(max_id)).items() 
+    else:
+      new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended").items() 
 
     for tweet in new_tweets:
       tweet_row = get_tweet_data_row(tweet)
@@ -128,9 +131,11 @@ def get_firefox_data(api):
   results = []
   
   try: 
-    #new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended").items()
-    #old_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended", max_id=str(max_id - 1)).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
-    new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended", since_id=str(max_id)).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
+    if max_id is not None:
+      new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended", since_id=str(max_id)).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
+    else:
+      new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended").items() 
+
     for tweet in new_tweets:
  
       # if in_reply_to_status_id_str has number, then look up that info, else, put blanks for fields reply_text, reply created_at, reply_user_id. we wouldn't now what % goes un-replied anyway so...
