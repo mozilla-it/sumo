@@ -278,11 +278,11 @@ def main():
 
   print("bucket value: " + bucket)
   
-  #update_answers()
+  update_answers()
   
-  #update_questions()
+  update_questions()
   
-  #analyze_word_freq()
+  analyze_word_freq()
 
 
 if __name__ == '__main__':
