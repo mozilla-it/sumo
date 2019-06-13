@@ -206,7 +206,7 @@ def analyze_word_freq():
   #start_dt = max_date.date() #.astype(datetime).strftime('%Y-%m-%d')
   #max_date = max_date_result['max_date'].values[0]
   if max_date is not None:
-    start_dt = max_date
+    start_dt = max_date.date()
   print(start_dt)
 
   assert start_dt <= end_dt,"Start Date >= End Date, no update needed."
