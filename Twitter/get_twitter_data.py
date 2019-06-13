@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 import csv
-import os, re, argparse
+import os
 
 from google.cloud import bigquery
 bq_client = bigquery.Client()
@@ -194,18 +194,6 @@ def get_firefox_reviews(api):
 
 
 def main():
-  
-  # declare global variables and update with arguments
-  global bucket
-  global sumo_bucket
-
-  parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
-  parser.add_argument('--bucket', nargs='?', const='.', type=str, help='which gs bucket to use')
-  args = parser.parse_args()
-  bucket = args.bucket
-  print("Bucket: ", bucket)	
-
-  sumo_bucket = storage_client.get_bucket(bucket)
 
   # OAuth process, using the keys and tokens
   #auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
