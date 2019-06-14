@@ -1,3 +1,6 @@
+# need to automate down the line as python script; may need to parameterize for project id
+# https://cloud.google.com/bigquery/docs/views
+
 imposing-union-227917:sumo.twitter_frt
 
 select tr.* from
