@@ -1,5 +1,6 @@
 #from google.oauth2.service_account import Credentials
-from oauth2client.client import GoogleCredentials
+from oauth2client.service_account import ServiceAccountCredentials
+#from oauth2client.client import GoogleCredentials
 from googleapiclient.discovery import build
 
 import argparse
@@ -7,6 +8,7 @@ import pandas as pd
 import csv
 from datetime import datetime, timedelta, date, timedelta
 import time
+import os
 
 from google.cloud import bigquery
 bq_client = bigquery.Client()
@@ -15,11 +17,12 @@ dataset_ref = bq_client.dataset(dataset_name)
 
 from google.cloud import storage
 storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+sumo_bucket = storage_client.get_bucket(bucket)
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
-KEY_FILE_LOCATION = 'sumo-imposing-union-227917-b3125c4ed9d8.json'
+KEY_FILE_LOCATION = '/opt/secrets/secret.json'
 VIEW_ID = '65912487'
 
 
@@ -35,12 +38,13 @@ def initialize_analyticsreporting():
     An authorized Analytics Reporting API V4 service object.
   """
 
-  #credentials = ServiceAccountCredentials.from_json_keyfile_name(KEY_FILE_LOCATION, SCOPES)
+  credentials = ServiceAccountCredentials.from_json_keyfile_name(KEY_FILE_LOCATION, SCOPES)
   # Build the service object.
   #analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
   #credentials = Credentials.from_service_account_file(KEY_FILE_LOCATION, scopes=SCOPES)
-  credentials = GoogleCredentials.get_application_default()
+  #credentials = GoogleCredentials.get_application_default()
+  #credentials = credentials.create_scoped(SCOPES)
   analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
   return analytics
@@ -343,7 +347,7 @@ def run_total_users(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_total_users')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users')  
 
 
 def run_search_ctr(analytics, start_dt, end_dt):
@@ -373,7 +377,7 @@ def run_search_ctr(analytics, start_dt, end_dt):
   
   print('File {} uploaded to {}.'.format("/tmp/" + fn, "googleanalytics/" + fn))
 
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_search_ctr')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_search_ctr')  
 
 
 def run_inproduct_vs_organic(analytics, start_dt, end_dt):
@@ -403,7 +407,7 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt):
   
   print('File {} uploaded to {}.'.format("/tmp/" + fn, "googleanalytics/" + fn))
 
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_inproduct_vs_organic')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic')  
 
 
 def run_kb_exit_rate(analytics, start_dt, end_dt):
@@ -434,7 +438,7 @@ def run_kb_exit_rate(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_kb_exit_rate')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_kb_exit_rate')  
 
 
 def run_questions_exit_rate(analytics, start_dt, end_dt):
@@ -465,7 +469,7 @@ def run_questions_exit_rate(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_questions_exit_rate')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_questions_exit_rate')  
 
   
 def run_users_by_country(analytics, start_dt, end_dt):
@@ -496,7 +500,7 @@ def run_users_by_country(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_users_by_country')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_users_by_country')  
 
 
 def update_bq_table(uri, fn, table_name):
