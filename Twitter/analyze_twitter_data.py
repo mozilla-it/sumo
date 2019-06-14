@@ -5,7 +5,7 @@ from nltk.corpus import stopwords
 import string
 import pandas as pd
 import gcsfs
-import os
+import os, sys
 
 from datetime import datetime, timezone, timedelta
 
@@ -128,7 +128,7 @@ def munge_data(dt, ignore_list):
     # add date zeroth date column
     df = df.rename(columns={'index':'tweet_word', 0:'tweet_freq'})
     df['tweet_dt'] = dt.strftime('%Y-%m-%d')
-    print(df)
+    #sys.stdout.buffer.write(df)
   
     fn = 'firefox_word_freq_' + dt.strftime('%Y%m%d') + '.csv'
     df.to_csv('/tmp/' + fn, index=False)
