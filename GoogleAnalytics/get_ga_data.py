@@ -19,7 +19,7 @@ sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
-KEY_FILE_LOCATION = 'sumo-imposing-union-227917-b3125c4ed9d8.json'
+KEY_FILE_LOCATION = '/etc/secret.json'
 VIEW_ID = '65912487'
 
 
@@ -35,13 +35,13 @@ def initialize_analyticsreporting():
     An authorized Analytics Reporting API V4 service object.
   """
 
-  #credentials = ServiceAccountCredentials.from_json_keyfile_name(KEY_FILE_LOCATION, SCOPES)
+  credentials = ServiceAccountCredentials.from_json_keyfile_name(KEY_FILE_LOCATION, SCOPES)
   # Build the service object.
   #analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
   #credentials = Credentials.from_service_account_file(KEY_FILE_LOCATION, scopes=SCOPES)
-  credentials = GoogleCredentials.get_application_default()
-  credentials = credentials.create_scoped(SCOPES)
+  #credentials = GoogleCredentials.get_application_default()
+  #credentials = credentials.create_scoped(SCOPES)
   analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
   return analytics
