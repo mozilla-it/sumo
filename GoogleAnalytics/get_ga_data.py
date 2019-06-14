@@ -8,6 +8,7 @@ import pandas as pd
 import csv
 from datetime import datetime, timedelta, date, timedelta
 import time
+import os
 
 from google.cloud import bigquery
 bq_client = bigquery.Client()
@@ -16,8 +17,9 @@ dataset_ref = bq_client.dataset(dataset_name)
 
 from google.cloud import storage
 storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+sumo_bucket = storage_client.get_bucket(bucket)
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 KEY_FILE_LOCATION = '/opt/secrets/secret.json'
@@ -327,8 +329,8 @@ def run_total_users(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if max_date is not None and start_dt <= max_date: start_dt = max_date + timedelta(1)
-  assert max_date is None or end_dt > max_date,"End Date <= Max Date, no update needed."
+  if max_date is not None and start_dt <= max_date.date(): start_dt = max_date.date() + timedelta(1)
+  assert max_date is None or end_dt > max_date.date(),"End Date <= Max Date, no update needed."
   assert start_dt < end_dt,"Start Date >= End Date, no update needed."
   
   print( start_dt)
@@ -345,7 +347,7 @@ def run_total_users(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_total_users')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users')  
 
 
 def run_search_ctr(analytics, start_dt, end_dt):
@@ -355,8 +357,8 @@ def run_search_ctr(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  assert end_dt > max_date,"End Date <= Max Date, no update needed."
+  if max_date is not None and start_dt <= max_date.date(): start_dt = max_date.date() + timedelta(1)
+  assert max_date is None or end_dt > max_date.date(),"End Date <= Max Date, no update needed."
   assert start_dt < end_dt,"Start Date >= End Date, no update needed."
   
   print( start_dt)
@@ -375,7 +377,7 @@ def run_search_ctr(analytics, start_dt, end_dt):
   
   print('File {} uploaded to {}.'.format("/tmp/" + fn, "googleanalytics/" + fn))
 
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_search_ctr')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_search_ctr')  
 
 
 def run_inproduct_vs_organic(analytics, start_dt, end_dt):
@@ -385,8 +387,8 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  assert end_dt > max_date,"End Date <= Max Date, no update needed."
+  if max_date is not None and start_dt <= max_date.date(): start_dt = max_date.date() + timedelta(1)
+  assert max_date is None or end_dt > max_date.date(),"End Date <= Max Date, no update needed."
   assert start_dt < end_dt,"Start Date >= End Date, no update needed."
   
   print( start_dt)
@@ -405,7 +407,7 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt):
   
   print('File {} uploaded to {}.'.format("/tmp/" + fn, "googleanalytics/" + fn))
 
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_inproduct_vs_organic')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic')  
 
 
 def run_kb_exit_rate(analytics, start_dt, end_dt):
@@ -415,8 +417,8 @@ def run_kb_exit_rate(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  assert end_dt > max_date,"End Date <= Max Date, no update needed."
+  if max_date is not None and start_dt <= max_date.date(): start_dt = max_date.date() + timedelta(1)
+  assert max_date is None or end_dt > max_date.date(),"End Date <= Max Date, no update needed."
   assert start_dt < end_dt,"Start Date >= End Date, no update needed."
   
   fn = "ga_data_kb_exit_rate_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
@@ -436,7 +438,7 @@ def run_kb_exit_rate(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_kb_exit_rate')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_kb_exit_rate')  
 
 
 def run_questions_exit_rate(analytics, start_dt, end_dt):
@@ -446,8 +448,8 @@ def run_questions_exit_rate(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  assert end_dt > max_date,"End Date <= Max Date, no update needed."
+  if max_date is not None and start_dt <= max_date.date(): start_dt = max_date.date() + timedelta(1)
+  assert max_date is None or end_dt > max_date.date(),"End Date <= Max Date, no update needed."
   assert start_dt < end_dt,"Start Date >= End Date, no update needed."
 
   fn = "ga_data_questions_exit_rate_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
@@ -467,7 +469,7 @@ def run_questions_exit_rate(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_questions_exit_rate')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_questions_exit_rate')  
 
   
 def run_users_by_country(analytics, start_dt, end_dt):
@@ -477,8 +479,8 @@ def run_users_by_country(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  assert end_dt > max_date,"End Date <= Max Date, no update needed."
+  if max_date is not None and start_dt <= max_date.date(): start_dt = max_date.date() + timedelta(1)
+  assert max_date is None or end_dt > max_date.date(),"End Date <= Max Date, no update needed."
   assert start_dt < end_dt,"Start Date >= End Date, no update needed."
   
   fn = "ga_data_users_by_country_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
@@ -498,7 +500,7 @@ def run_users_by_country(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://moz-it-data-sumo/googleanalytics/", fn, 'ga_users_by_country')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_users_by_country')  
 
 
 def update_bq_table(uri, fn, table_name):
