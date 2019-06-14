@@ -1,5 +1,5 @@
-#from google.oauth2.service_account import Credentials
-from oauth2client.client import GoogleCredentials
+from google.oauth2.service_account import Credentials
+#from oauth2client.client import GoogleCredentials
 from googleapiclient.discovery import build
 
 import argparse
