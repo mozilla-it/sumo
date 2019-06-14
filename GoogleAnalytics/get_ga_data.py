@@ -20,7 +20,7 @@ sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
-KEY_FILE_LOCATION = '/etc/secret.json'
+KEY_FILE_LOCATION = '/opt/secrets/secret.json'
 VIEW_ID = '65912487'
 
 
