@@ -138,7 +138,7 @@ def munge_data(dt, ignore_list):
     update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_word_frequencies')  
 
   
-if __name__ == '__main__':
+def main():
   #start_dt = datetime(2019, 3, 23) # inclusive
   end_dt = datetime.today().date() # exclusive, datetime.today().date()
   
@@ -146,9 +146,9 @@ if __name__ == '__main__':
   query_job = bq_client.query(qry_max_dt)
   max_dt_result = query_job.to_dataframe() 
   try:
-    start_dt = max_dt_result['max_dt'].values[0]
+    start_dt = max_dt_result['max_dt'].values[0].date()
   except:
-    start_dt = datetime(2019, 3, 23) # inclusive
+    start_dt = datetime(2019, 3, 23).date() # inclusive
   print(start_dt)
   
   #print(content)
@@ -164,3 +164,6 @@ if __name__ == '__main__':
     print(dt_str)
 
     munge_data(dt, ignore_list) 
+
+if __name__ == '__main__':
+  main()
