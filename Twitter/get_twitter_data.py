@@ -163,7 +163,9 @@ def get_firefox_reviews(api):
     #  df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
     min_id_str = df['id_str'].min()
     max_id_str = df['id_str'].max()
-    print('min: ' + min_id_str + ', max: ' + max_id_str)
+    #print('min: ' + min_id_str + ', max: ' + max_id_str)
+    print("min_id_str: ", min_id_str)
+    print("max_id_str: ", max_id_str)
     fn = 'twitter_data_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
     df.to_csv("/tmp/" + fn, index=False)
     print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
