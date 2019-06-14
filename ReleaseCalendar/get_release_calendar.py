@@ -14,9 +14,11 @@ from google.cloud import bigquery
 bq_client = bigquery.Client()
 dataset_ref = bq_client.dataset('sumo')
 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+
 from google.cloud import storage
 storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
+sumo_bucket = storage_client.get_bucket(bucket)
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +133,7 @@ def update_release_calendar(url_version, product):
 
     blob = sumo_bucket.blob("release_calendar/release_calendar.csv")
     blob.upload_from_filename(fileout)
-    reload_bq_table("gs://moz-it-data-sumo/release_calendar/", "release_calendar.csv", 'release_calendar')  
+    reload_bq_table("gs://{}/release_calendar/".format(bucket), "release_calendar.csv", 'release_calendar')  
 
   else:
     print('[!] HTTP {0} calling [{1}]'.format(response.status_code, api_url)) # 401 unauthorized

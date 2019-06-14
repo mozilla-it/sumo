@@ -1,6 +1,7 @@
 FROM google/cloud-sdk:slim
 
 COPY . /workspace/
+COPY nltk_data /usr/local/lib/nltk_data
 
 WORKDIR /workspace
 
