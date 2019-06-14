@@ -90,18 +90,21 @@ def get_firefox_mentions(api):
     
     df = pd.DataFrame.from_records(results, columns=["id_str","created_at","full_text","user_id","in_reply_to_status_id_str"] )
 
-    min_id_str = df['id_str'].min()
-    max_id_str = df['id_str'].max()
-    print('min: ' + min_id_str + ', max: ' + max_id_str)
-    fn = 'twitter_data_mentions_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
-    df.to_csv("/tmp/" + fn, index=False, encoding='utf-8')
-    print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
-    
-    blob = sumo_bucket.blob("twitter/" + fn)
-    blob.upload_from_filename("/tmp/" + fn)
+    if df.shape[0] > 0:
+      min_id_str = df['id_str'].min()
+      max_id_str = df['id_str'].max()
+      print('min: ' + min_id_str + ', max: ' + max_id_str)
+      fn = 'twitter_data_mentions_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
+      df.to_csv("/tmp/" + fn, index=False, encoding='utf-8')
+      print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
+      
+      blob = sumo_bucket.blob("twitter/" + fn)
+      blob.upload_from_filename("/tmp/" + fn)
 
-    update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_mentions')  
-    
+      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_mentions')  
+    else:
+      print ("Downloaded {0} tweets, no mentions updates.".format(tweetCount))
+
   except tweepy.TweepError as e:
     # Just exit if any error
     print("some error : " + str(e))
@@ -161,19 +164,20 @@ def get_firefox_reviews(api):
     
     df = pd.DataFrame.from_records(results, columns=["id_str","created_at","full_text","user_id","in_reply_to_status_id_str","in_reply_to_status_text","in_reply_to_status_created_at","in_reply_to_status_user_id"] )
     #  df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
-    min_id_str = df['id_str'].min()
-    max_id_str = df['id_str'].max()
-    #print('min: ' + min_id_str + ', max: ' + max_id_str)
-    print("min_id_str: ", min_id_str)
-    print("max_id_str: ", max_id_str)
-    fn = 'twitter_data_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
-    df.to_csv("/tmp/" + fn, index=False)
-    print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
-    
-    blob = sumo_bucket.blob("twitter/" + fn)
-    blob.upload_from_filename("/tmp/" + fn)
 
-    update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_reviews')  
+    if df.shape[0] > 0:
+      min_id_str = df['id_str'].min()
+      max_id_str = df['id_str'].max()
+      fn = 'twitter_data_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
+      df.to_csv("/tmp/" + fn, index=False)
+      print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
+      
+      blob = sumo_bucket.blob("twitter/" + fn)
+      blob.upload_from_filename("/tmp/" + fn)
+
+      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_reviews')  
+    else:
+      print ("Downloaded {0} tweets, no reviews updates.".format(tweetCount))
     
   except tweepy.TweepError as e:
     # Just exit if any error
