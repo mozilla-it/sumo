@@ -331,10 +331,10 @@ def run_total_users(analytics, start_dt, end_dt):
   # if start_date < max_date, then start_date=max_date  
   if max_date is not None and start_dt <= max_date: start_dt = max_date + timedelta(1)
   if end_dt<=max_date:
-    print("End Date <= Max Date, no update needed.")
+    print( ("End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
   if start_dt>=max_date:
-    print("Start Date >= End Date, no update needed.")
+    print( ("Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
     return
   
   print( start_dt)
