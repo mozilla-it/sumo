@@ -333,7 +333,7 @@ def run_total_users(analytics, start_dt, end_dt):
   if end_dt<=max_date:
     print( ("run_total_users: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
-  if start_dt>=end_date:
+  if start_dt>=end_dt:
     print( ("run_total_users: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
     return
   
@@ -365,7 +365,7 @@ def run_search_ctr(analytics, start_dt, end_dt):
   if end_dt<=max_date:
     print( ("run_search_ctr: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
-  if start_dt>=end_date:
+  if start_dt>=end_dt:
     print( ("run_search_ctr: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
     return
   
@@ -399,7 +399,7 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt):
   if end_dt<=max_date:
     print( ("run_inproduct_vs_organic: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
-  if start_dt>=end_date:
+  if start_dt>=end_dt:
     print( ("run_inproduct_vs_organic: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
     return
     
@@ -433,7 +433,7 @@ def run_kb_exit_rate(analytics, start_dt, end_dt):
   if end_dt<=max_date:
     print( ("run_kb_exit_rate: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
-  if start_dt>=end_date:
+  if start_dt>=end_dt:
     print( ("run_kb_exit_rate: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
     return
   
@@ -468,7 +468,7 @@ def run_questions_exit_rate(analytics, start_dt, end_dt):
   if end_dt<=max_date:
     print( ("run_questions_exit_rate: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
-  if start_dt>=end_date:
+  if start_dt>=end_dt:
     print( ("run_questions_exit_rate: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
     return
     
@@ -503,7 +503,7 @@ def run_users_by_country(analytics, start_dt, end_dt):
   if end_dt<=max_date:
     print( ("run_users_by_country: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
-  if start_dt>=end_date:
+  if start_dt>=end_dt:
     print( ("run_users_by_country: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
     return
   
