@@ -332,10 +332,10 @@ def run_total_users(analytics, start_dt, end_dt):
   if max_date is not None and start_dt <= max_date: start_dt = max_date + timedelta(1)
   if end_dt<=max_date:
     print("End Date <= Max Date, no update needed.")
-    break
+    return
   if start_dt>=max_date:
     print("Start Date >= End Date, no update needed.")
-    break
+    return
   
   print( start_dt)
   
@@ -364,10 +364,10 @@ def run_search_ctr(analytics, start_dt, end_dt):
   if start_dt <= max_date: start_dt = max_date + timedelta(1)
   if end_dt<=max_date:
     print("End Date <= Max Date, no update needed.")
-    break
+    return
   if start_dt>=max_date:
     print("Start Date >= End Date, no update needed.")
-    break
+    return
   
   print( start_dt)
 
@@ -398,10 +398,10 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt):
   if start_dt <= max_date: start_dt = max_date + timedelta(1)
   if end_dt<=max_date:
     print("End Date <= Max Date, no update needed.")
-    break
+    return
   if start_dt>=max_date:
     print("Start Date >= End Date, no update needed.")
-    break
+    return
     
   print( start_dt)
   
@@ -432,10 +432,10 @@ def run_kb_exit_rate(analytics, start_dt, end_dt):
   if start_dt <= max_date: start_dt = max_date + timedelta(1)
   if end_dt<=max_date:
     print("End Date <= Max Date, no update needed.")
-    break
+    return
   if start_dt>=max_date:
     print("Start Date >= End Date, no update needed.")
-    break
+    return
   
   fn = "ga_data_kb_exit_rate_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
 
@@ -467,10 +467,10 @@ def run_questions_exit_rate(analytics, start_dt, end_dt):
   if start_dt <= max_date: start_dt = max_date + timedelta(1)
   if end_dt<=max_date:
     print("End Date <= Max Date, no update needed.")
-    break
+    return
   if start_dt>=max_date:
     print("Start Date >= End Date, no update needed.")
-    break
+    return
     
   fn = "ga_data_questions_exit_rate_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
 
@@ -502,10 +502,10 @@ def run_users_by_country(analytics, start_dt, end_dt):
   if start_dt <= max_date: start_dt = max_date + timedelta(1)
   if end_dt<=max_date:
     print("End Date <= Max Date, no update needed.")
-    break
+    return
   if start_dt>=max_date:
     print("Start Date >= End Date, no update needed.")
-    break
+    return
   
   fn = "ga_data_users_by_country_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
 
