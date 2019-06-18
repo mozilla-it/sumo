@@ -1,20 +1,59 @@
+import datetime
+
 import pandas as pd
 
 from google.cloud import bigquery
 from google.cloud import storage
-from google.cloud.exceptions import Forbidden
+from google.cloud.exceptions import Forbidden, NotFound
 
+from sumo.Product_Insights.Classification.utils \
+        import keywords_based_classifier
 from sumo.Product_Insights.Sentiment.utils \
         import gc_detect_language, gc_sentiment, discretize_sentiment
+from sumo.Product_Insights.Twitter.create_twitter_tables \
+        import create_twitter_sentiment
 
 PROJECT_ID = 'marketing-1003'
+
+INPUT_DATASET = 'sumo_views'
+INPUT_TABLE = 'twitter_mentions_view'
+OUTPUT_DATASET = 'analyse_and_tal'
+OUTPUT_TABLE = 'twitter_sentiment'
+
+OUTPUT_BUCKET = 'test-unique-bucket-name'
+
 bq_client = bigquery.Client(project=PROJECT_ID)
 storage_client = storage.Client(project=PROJECT_ID)
-dataset_ref = bq_client.dataset('analyse_and_tal')
+bucket = storage_client.get_bucket('test-unique-bucket-name')
 
-def load_data(limit=50, dataset='sumo_views', table='twitter_mentions_view'):
-  query = ('SELECT * \
-           FROM `{0}.{1}.{2}` LIMIT {3}').format(PROJECT_ID, dataset, table, limit)
+def get_timeperiod():
+  ''' Return the current time and last time data was previously saved with this scipt '''
+  start_dt = datetime.datetime(2010, 5, 1).isoformat()
+  end_dt = datetime.datetime.now().isoformat()
+  
+  qry_max_date = ("SELECT max(created_at) max_date FROM {0}.{1}")\
+                   .format(OUTPUT_DATASET, OUTPUT_TABLE)
+
+  query_job = bq_client.query(qry_max_date)
+  try:
+    max_date_result = query_job.to_dataframe() 
+  except NotFound:
+    create_twitter_sentiment()
+    max_date_result = query_job.to_dataframe() 
+  max_date = pd.to_datetime(max_date_result['max_date'].values[0])
+  if max_date is not None:
+    start_dt = max_date.isoformat()
+  return(start_dt, end_dt)
+
+def load_data(start_dt, end_dt, limit=None):
+  '''Gets data from the input twitter table'''
+  query = ('''SELECT * FROM `{0}.{1}.{2}` \
+              WHERE `created_at` BETWEEN TIMESTAMP("{3}") AND TIMESTAMP("{4}") \
+              ORDER BY `created_at` ASC''').\
+              format(PROJECT_ID, INPUT_DATASET, INPUT_TABLE, 
+                     start_dt, end_dt)
+  if limit:
+    query += ' LIMIT {}'.format(limit)
   try:
       df = bq_client.query(query).to_dataframe()
       return(df)
@@ -23,6 +62,7 @@ def load_data(limit=50, dataset='sumo_views', table='twitter_mentions_view'):
       return(None)
 
 def language_analysis(df):
+  '''Guesses the language of each tweet'''
   d_lang = {}
   d_confidence = {}
   for i, row in df.iterrows():
@@ -30,18 +70,21 @@ def language_analysis(df):
           confidence, language = gc_detect_language(row.full_text)
           d_lang[row.id_str] = language
           d_confidence[row.id_str] = confidence
-      except Forbidden:
-          print('Forbidden')
+      except Forbidden as e:
+          print(e)
 
   df[u'language'] = df['id_str'].map(d_lang)
   df[u'confidence'] = df['id_str'].map(d_confidence)
   return(df)
 
 def filter_language(df, lang='en', lang_confidence=0.8):
-  df = df[(df.language == lang)&(df.confidence > lang_confidence)]
+  '''Filters out non-english tweets and removes lang columns'''
+  df = df[(df.language == lang)&(df.confidence >= lang_confidence)]
+  df = df.drop(['language', 'confidence'], axis=1)
   return(df)
 
 def run_sentiment_analysis(df):
+  '''Estimates the sentiment of each tweet'''
   sentiment_score = {}
   sentiment_magnitude = {}
   for i, row in df.iterrows():
@@ -59,27 +102,77 @@ def run_sentiment_analysis(df):
 
   return(df)
 
-
 def get_topics(df):
-  df['topic'] = 'na'
+  '''Determines the topic based on the keywords in keywords_map'''
+  #Load keywords map
+  query = 'SELECT * FROM `{}.{}.{}`'.format(PROJECT_ID, OUTPUT_DATASET, 'keywords_map')
+  query_job = bq_client.query(query)
+  keywords_map = query_job.to_dataframe() 
+  
+  text_topic = {}
+  
+  #Detect topic based on keywords
+  for i, row in df.iterrows():
+    topics = keywords_based_classifier(row.full_text, keywords_map)
+
+    #To enable writing our list of topics to a big query table
+    #each topic has to be contained within a list of dicts
+    #where each dicts key is topic and item is the topic at hand. 
+    topics_list = [{'topic': ''}]
+    for topic in topics:
+      topics_list.append({'topic': topic})
+
+    text_topic[row.id_str] = topics_list
+
+  df[u'topics'] = df['id_str'].map(text_topic)
   return(df)
 
-def save_results(df):
-  save_df = df[['id_str', 'score', 'magnitude', 'discrete_sentiment']]
-  save_df = save_df.set_index('id_str')
-  table_ref = dataset_ref.table('twitter_sentiment') 
-  job = bq_client.load_table_from_dataframe(save_df, table_ref) 
-  job.result()
+
+def update_bq_table(uri, fn, table_name):
+  '''Saves data from a bq bucket to a table'''
+  dataset_ref = bq_client.dataset(OUTPUT_DATASET)
+  table_ref = dataset_ref.table(table_name)
+  
+  job_config = bigquery.LoadJobConfig()
+  job_config.write_disposition = "WRITE_APPEND"
+  job_config.source_format = bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
+  job_config.autodetect = True
+  
+  orig_rows =  bq_client.get_table(table_ref).num_rows
+
+  load_job = bq_client.load_table_from_uri(uri + fn, table_ref, job_config=job_config)  # API request
+  print("Starting job {}".format(load_job.job_id))
+
+  load_job.result()  # Waits for table load to complete.
+  destination_table = bq_client.get_table(table_ref)
+  print('Loaded {} rows into {}:{}.'.format(destination_table.num_rows-orig_rows, 'sumo', table_name))
+  blob = bucket.blob("twitter/" + fn)
+  new_blob = bucket.rename_blob(blob, "twitter/processed/" + fn)
+  print('Moved blob to processed subfolder')
+
+def save_results(df, start_dt, end_dt):
+  '''Saves the dataframe to a gs bucket and a bq table'''
+  fn = 'twitter_sentiment_' + start_dt[0:10] + "_to_" + end_dt[0:10] + '.json'
+  
+  df = df.set_index('id_str')
+
+  df.to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
+
+  blob = bucket.blob("twitter/" + fn)
+  blob.upload_from_filename("/tmp/" + fn)
+
+  update_bq_table("gs://{}/twitter/".format(bucket.name), fn, 'twitter_sentiment') 
 
 
 def main():
-  df = load_data()
-  df = language_analysis(df)
-  df = filter_language(df, lang='en', lang_confidence=0.8)
-  df = run_sentiment_analysis(df)
-  df = get_topics(df)
-  save_results(df)
-
+  start_dt, end_dt = get_timeperiod()
+  df = load_data(start_dt, end_dt)
+  if df is not None:
+    df = language_analysis(df)
+    df = filter_language(df)
+    df = run_sentiment_analysis(df)
+    df = get_topics(df)
+    save_results(df, start_dt, end_dt)
 
 if __name__ == '__main__':
   main()
