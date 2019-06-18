@@ -8,6 +8,10 @@ from google.cloud.exceptions import Forbidden, NotFound
 
 from sumo.Product_Insights.Classification.utils \
         import keywords_based_classifier
+from sumo.Product_Insights.Classification.create_classification_table \
+        import create_keywords_map
+from sumo.Product_Insights.Classification.upload_keywords_map \
+        import upload_keywords_map
 from sumo.Product_Insights.Sentiment.utils \
         import gc_detect_language, gc_sentiment, discretize_sentiment
 from sumo.Product_Insights.Twitter.create_twitter_tables \
@@ -21,6 +25,8 @@ OUTPUT_DATASET = 'analyse_and_tal'
 OUTPUT_TABLE = 'twitter_sentiment'
 
 OUTPUT_BUCKET = 'test-unique-bucket-name'
+
+local_keywords_file = './Product_Insights/Classification/keywords_map.csv'
 
 bq_client = bigquery.Client(project=PROJECT_ID)
 storage_client = storage.Client(project=PROJECT_ID)
@@ -38,8 +44,9 @@ def get_timeperiod():
   try:
     max_date_result = query_job.to_dataframe() 
   except NotFound:
-    create_twitter_sentiment()
+    create_twitter_sentiment(OUTPUT_DATASET, OUTPUT_TABLE)
     max_date_result = query_job.to_dataframe() 
+
   max_date = pd.to_datetime(max_date_result['max_date'].values[0])
   if max_date is not None:
     start_dt = max_date.isoformat()
@@ -81,7 +88,10 @@ def filter_language(df, lang='en', lang_confidence=0.8):
   '''Filters out non-english tweets and removes lang columns'''
   df = df[(df.language == lang)&(df.confidence >= lang_confidence)]
   df = df.drop(['language', 'confidence'], axis=1)
-  return(df)
+  if df.empty:
+    print('No data in dataframe after language filter')
+  else:
+    return(df)
 
 def run_sentiment_analysis(df):
   '''Estimates the sentiment of each tweet'''
@@ -105,10 +115,17 @@ def run_sentiment_analysis(df):
 def get_topics(df):
   '''Determines the topic based on the keywords in keywords_map'''
   #Load keywords map
-  query = 'SELECT * FROM `{}.{}.{}`'.format(PROJECT_ID, OUTPUT_DATASET, 'keywords_map')
+  table_name = 'keywords_map'
+  query = 'SELECT * FROM `{}.{}.{}`'.format(PROJECT_ID, OUTPUT_DATASET, table_name)
   query_job = bq_client.query(query)
-  keywords_map = query_job.to_dataframe() 
-  
+  try:
+    keywords_map = query_job.to_dataframe() 
+  except NotFound:
+    create_keywords_map(OUTPUT_DATASET, table_name)
+    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, table_name)
+    query_job = bq_client.query(query)
+    keywords_map = query_job.to_dataframe()
+
   text_topic = {}
   
   #Detect topic based on keywords
@@ -148,8 +165,7 @@ def update_bq_table(uri, fn, table_name):
   print('Loaded {} rows into {}:{}.'.format(destination_table.num_rows-orig_rows, 'sumo', table_name))
   blob = bucket.blob("twitter/" + fn)
   new_blob = bucket.rename_blob(blob, "twitter/processed/" + fn)
-  print('Moved blob to processed subfolder')
-
+  
 def save_results(df, start_dt, end_dt):
   '''Saves the dataframe to a gs bucket and a bq table'''
   fn = 'twitter_sentiment_' + start_dt[0:10] + "_to_" + end_dt[0:10] + '.json'
@@ -166,7 +182,7 @@ def save_results(df, start_dt, end_dt):
 
 def main():
   start_dt, end_dt = get_timeperiod()
-  df = load_data(start_dt, end_dt)
+  df = load_data(start_dt, end_dt, limit=300)
   if df is not None:
     df = language_analysis(df)
     df = filter_language(df)

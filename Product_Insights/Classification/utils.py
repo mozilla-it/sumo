@@ -26,5 +26,5 @@ def keywords_based_classifier(text, keywords_map):
   text_topics = []
   for i, row in keywords_map.iterrows():
     if match_keywords(text, row.keywords):
-      text_topics.append(row.topics)      
+      text_topics.append(row.topic)      
   return(list(set(text_topics)))
