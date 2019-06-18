@@ -6,6 +6,10 @@ dataset_ref = client.dataset('analyse_and_tal')
 def create_twitter_sentiment():
   schema = [
       bigquery.SchemaField('id_str', 'INTEGER', mode='NULLABLE'),
+      bigquery.SchemaField('created_at', 'TIMESTAMP', mode='NULLABLE'),
+      bigquery.SchemaField('full_text', 'STRING', mode='NULLABLE'),
+      bigquery.SchemaField('user_id', 'INTEGER', mode='NULLABLE'),
+      bigquery.SchemaField('in_reply_to_status_id_str', 'INTEGER', mode='NULLABLE'),
       bigquery.SchemaField('score', 'FLOAT', mode='NULLABLE',
                            description='Sentiment score from the google language api'),
       bigquery.SchemaField('magnitude', 'FLOAT', mode='NULLABLE',
