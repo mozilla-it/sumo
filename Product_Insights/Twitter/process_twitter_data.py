@@ -6,7 +6,7 @@ from google.cloud import bigquery
 from google.cloud import storage
 from google.cloud.exceptions import Forbidden, NotFound
 
-from Product_Insights.Classification.utils \
+from Product_Insights.Classification.utils 
         import keywords_based_classifier
 from Product_Insights.Classification.create_classification_table \
         import create_keywords_map
@@ -112,9 +112,8 @@ def run_sentiment_analysis(df):
 
   return(df)
 
-def get_topics(df):
-  '''Determines the topic based on the keywords in keywords_map'''
-  #Load keywords map
+def get_keywords_map():
+  '''Load the keywords map''' 
   table_name = 'keywords_map'
   query = 'SELECT * FROM `{}.{}.{}`'.format(PROJECT_ID, OUTPUT_DATASET, table_name)
   query_job = bq_client.query(query)
@@ -125,7 +124,10 @@ def get_topics(df):
     upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, table_name)
     query_job = bq_client.query(query)
     keywords_map = query_job.to_dataframe()
+  return(keywords_map)
 
+def get_topics(df, keywords_map):
+  '''Determines the topic based on the keywords in keywords_map'''
   text_topic = {}
   
   #Detect topic based on keywords
@@ -187,7 +189,8 @@ def main():
     df = language_analysis(df)
     df = filter_language(df)
     df = run_sentiment_analysis(df)
-    df = get_topics(df)
+    keywords_map = get_keywords_map()
+    df = get_topics(df, keywords_map)
     save_results(df, start_dt, end_dt)
 
 if __name__ == '__main__':
