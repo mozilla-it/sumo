@@ -6,15 +6,15 @@ from google.cloud import bigquery
 from google.cloud import storage
 from google.cloud.exceptions import Forbidden, NotFound
 
-from sumo.Product_Insights.Classification.utils \
+from Product_Insights.Classification.utils \
         import keywords_based_classifier
-from sumo.Product_Insights.Classification.create_classification_table \
+from Product_Insights.Classification.create_classification_table \
         import create_keywords_map
-from sumo.Product_Insights.Classification.upload_keywords_map \
+from Product_Insights.Classification.upload_keywords_map \
         import upload_keywords_map
-from sumo.Product_Insights.Sentiment.utils \
+from Product_Insights.Sentiment.utils \
         import gc_detect_language, gc_sentiment, discretize_sentiment
-from sumo.Product_Insights.Twitter.create_twitter_tables \
+from Product_Insights.Twitter.create_twitter_tables \
         import create_twitter_sentiment
 
 PROJECT_ID = 'marketing-1003'
