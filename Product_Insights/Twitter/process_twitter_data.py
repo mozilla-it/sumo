@@ -45,6 +45,7 @@ def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
     max_date_result = query_job.to_dataframe() 
   except NotFound:
     create_twitter_sentiment(OUTPUT_DATASET, OUTPUT_TABLE)
+    query_job = bq_client.query(qry_max_date)
     max_date_result = query_job.to_dataframe() 
 
   max_date = pd.to_datetime(max_date_result['max_date'].values[0])
@@ -52,9 +53,8 @@ def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
     start_dt = max_date.isoformat()
   return(start_dt, end_dt)
 
-def load_data(INPUT_DATASET, INPUT_TABLE, 
-              start_dt, end_dt, limit=None):
-  '''Gets data from the input twitter table'''
+def load_data(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt, limit=None):
+  '''Gets data from the input table'''
   query = ('''SELECT * FROM `{0}.{1}` \
               WHERE `created_at` BETWEEN TIMESTAMP("{2}") AND TIMESTAMP("{3}") \
               ORDER BY `created_at` ASC''').\
