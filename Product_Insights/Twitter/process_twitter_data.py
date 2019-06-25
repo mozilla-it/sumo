@@ -6,7 +6,7 @@ from google.cloud import bigquery
 from google.cloud import storage
 from google.cloud.exceptions import Forbidden, NotFound
 
-from Product_Insights.Classification.utils 
+from Product_Insights.Classification.utils \
         import keywords_based_classifier
 from Product_Insights.Classification.create_classification_table \
         import create_keywords_map
@@ -21,6 +21,7 @@ PROJECT_ID = 'marketing-1003'
 
 INPUT_DATASET = 'sumo_views'
 INPUT_TABLE = 'twitter_mentions_view'
+
 OUTPUT_DATASET = 'analyse_and_tal'
 OUTPUT_TABLE = 'twitter_sentiment'
 
@@ -30,9 +31,8 @@ local_keywords_file = './Product_Insights/Classification/keywords_map.csv'
 
 bq_client = bigquery.Client(project=PROJECT_ID)
 storage_client = storage.Client(project=PROJECT_ID)
-bucket = storage_client.get_bucket('test-unique-bucket-name')
 
-def get_timeperiod():
+def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
   ''' Return the current time and last time data was previously saved with this scipt '''
   start_dt = datetime.datetime(2010, 5, 1).isoformat()
   end_dt = datetime.datetime.now().isoformat()
@@ -52,13 +52,13 @@ def get_timeperiod():
     start_dt = max_date.isoformat()
   return(start_dt, end_dt)
 
-def load_data(start_dt, end_dt, limit=None):
+def load_data(INPUT_DATASET, INPUT_TABLE, 
+              start_dt, end_dt, limit=None):
   '''Gets data from the input twitter table'''
-  query = ('''SELECT * FROM `{0}.{1}.{2}` \
-              WHERE `created_at` BETWEEN TIMESTAMP("{3}") AND TIMESTAMP("{4}") \
+  query = ('''SELECT * FROM `{0}.{1}` \
+              WHERE `created_at` BETWEEN TIMESTAMP("{2}") AND TIMESTAMP("{3}") \
               ORDER BY `created_at` ASC''').\
-              format(PROJECT_ID, INPUT_DATASET, INPUT_TABLE, 
-                     start_dt, end_dt)
+              format(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt)
   if limit:
     query += ' LIMIT {}'.format(limit)
   try:
@@ -112,10 +112,10 @@ def run_sentiment_analysis(df):
 
   return(df)
 
-def get_keywords_map():
+def get_keywords_map(OUTPUT_DATASET, OUTPUT_BUCKET, local_keywords_file):
   '''Load the keywords map''' 
   table_name = 'keywords_map'
-  query = 'SELECT * FROM `{}.{}.{}`'.format(PROJECT_ID, OUTPUT_DATASET, table_name)
+  query = 'SELECT * FROM `{0}.{1}`'.format(OUTPUT_DATASET, table_name)
   query_job = bq_client.query(query)
   try:
     keywords_map = query_job.to_dataframe() 
@@ -126,7 +126,7 @@ def get_keywords_map():
     keywords_map = query_job.to_dataframe()
   return(keywords_map)
 
-def get_topics(df, keywords_map):
+def determine_topics(df, keywords_map):
   '''Determines the topic based on the keywords in keywords_map'''
   text_topic = {}
   
@@ -147,10 +147,9 @@ def get_topics(df, keywords_map):
   return(df)
 
 
-def update_bq_table(uri, fn, table_name):
+def update_bq_table(uri, fn, table_ref):
   '''Saves data from a bq bucket to a table'''
-  dataset_ref = bq_client.dataset(OUTPUT_DATASET)
-  table_ref = dataset_ref.table(table_name)
+
   
   job_config = bigquery.LoadJobConfig()
   job_config.write_disposition = "WRITE_APPEND"
@@ -164,12 +163,18 @@ def update_bq_table(uri, fn, table_name):
 
   load_job.result()  # Waits for table load to complete.
   destination_table = bq_client.get_table(table_ref)
-  print('Loaded {} rows into {}:{}.'.format(destination_table.num_rows-orig_rows, 'sumo', table_name))
+  print('Loaded {} rows into {}:{}.'.format(destination_table.num_rows-orig_rows, 'sumo', table_ref.table_id))
+
+  
+def move_blob_to_processed(bucket,fn):
   blob = bucket.blob("twitter/" + fn)
   new_blob = bucket.rename_blob(blob, "twitter/processed/" + fn)
-  
-def save_results(df, start_dt, end_dt):
+
+def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt):
   '''Saves the dataframe to a gs bucket and a bq table'''
+
+  bucket = storage_client.get_bucket(OUTPUT_BUCKET)
+
   fn = 'twitter_sentiment_' + start_dt[0:10] + "_to_" + end_dt[0:10] + '.json'
   
   df = df.set_index('id_str')
@@ -179,19 +184,32 @@ def save_results(df, start_dt, end_dt):
   blob = bucket.blob("twitter/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://{}/twitter/".format(bucket.name), fn, 'twitter_sentiment') 
+  dataset_ref = bq_client.dataset(OUTPUT_DATASET)
+  table_ref = dataset_ref.table(OUTPUT_TABLE)
 
+  update_bq_table("gs://{}/twitter/".format(bucket.name), fn, table_ref) 
+  move_blob_to_processed(bucket,fn)
 
-def main():
-  start_dt, end_dt = get_timeperiod()
-  df = load_data(start_dt, end_dt, limit=300)
+def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE):
+  start_dt, end_dt = get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE)
+  #df = load_data(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt, limit=500)
+  df = load_data(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt)
+  return(df, start_dt, end_dt)
+
+def get_sentiment(df):
+  df = language_analysis(df)
+  df = filter_language(df)
+  df = run_sentiment_analysis(df)
+  return(df)
+
+def get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file):
+  keywords_map = get_keywords_map(OUTPUT_DATASET, OUTPUT_BUCKET, local_keywords_file)
+  df = determine_topics(df, keywords_map)
+  return(df)
+
+def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, local_keywords_file):
+  df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if df is not None:
-    df = language_analysis(df)
-    df = filter_language(df)
-    df = run_sentiment_analysis(df)
-    keywords_map = get_keywords_map()
-    df = get_topics(df, keywords_map)
-    save_results(df, start_dt, end_dt)
-
-if __name__ == '__main__':
-  main()
+    df = get_sentiment(df)
+    df = get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file)
+    save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
