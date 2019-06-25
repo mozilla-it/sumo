@@ -11,6 +11,7 @@ Uses Google Analytics Reporting API v4 to pull dimensions and metrics for the Go
 
 https://developers.google.com/analytics/devguides/reporting/core/v4/rest/
 
+Make sure Analytics Reporting API is enabled in the GCP running the code.
 A valid service account should be permissioned to pull data from the SUMO report from the Google Analytics side.
 GoogleAnalytics/create_ga_tables.py creates Google Analytics BiqQuery tables with schema definition.
 GoogleAnalytics/get_ga_data.py pulls data for a given range. The data is written to local csv files in /tmp folder, and pushed to google storage gs://<sumo-bucket>/googleanalytics/. The google storage files are uploaded to BigQuery dataset sumo table ga_*. After upload, the files are moved to the /processed subfolder.  Some of the data pulls hit daily data limits so it is recommend to run data pulls in one month chunks. 
@@ -73,14 +74,11 @@ make install
 ```shell
 python setup.py test
 ```
-
-Here again you should state what actually happens when the code above gets
-executed.
+Sigh, maybe someday.
 
 ### Deploying / Publishing
 
-In case there's some step you have to take that publishes this project to a
-server, this is the right time to state it.
+Define GCP storage bucket where files should go.
 
 ```shell
 packagemanager deploy awesome-project -s server.com -u username -p password

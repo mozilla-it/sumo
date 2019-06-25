@@ -47,8 +47,8 @@ def main():
       writer = csv.writer(f, dialect='myDialect')
       writer.writerows(SurveyGizmo.get_survey_data(api_url_base, params))
   
-  bucket = storage_client.get_bucket(bucket)
-  blob = bucket.blob('surveygizmo/csat_results.csv')
+  storage_bucket = storage_client.get_bucket(bucket)
+  blob = storage_bucket.blob('surveygizmo/csat_results.csv')
   blob.upload_from_filename("/tmp/csat_results.csv")
 
   SurveyGizmo.update_bq_table("gs://{}/surveygizmo/csat_results.csv".format(bucket), 'sumo', 'surveygizmo')

@@ -74,7 +74,10 @@ def get_firefox_mentions(api):
   results = []
   
   try: 
-    new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended", since_id=str(max_id)).items() 
+    if max_id is not None:
+      new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended", since_id=str(max_id)).items() 
+    else:
+      new_tweets = tweepy.Cursor(api.search,  q="@firefox", tweet_mode="extended").items() 
 
     for tweet in new_tweets:
       tweet_row = get_tweet_data_row(tweet)
@@ -87,24 +90,27 @@ def get_firefox_mentions(api):
     
     df = pd.DataFrame.from_records(results, columns=["id_str","created_at","full_text","user_id","in_reply_to_status_id_str"] )
 
-    min_id_str = df['id_str'].min()
-    max_id_str = df['id_str'].max()
-    print('min: ' + min_id_str + ', max: ' + max_id_str)
-    fn = 'twitter_data_mentions_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
-    df.to_csv("/tmp/" + fn, index=False, encoding='utf-8')
-    print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
-    
-    blob = sumo_bucket.blob("twitter/" + fn)
-    blob.upload_from_filename("/tmp/" + fn)
+    if df.shape[0] > 0:
+      min_id_str = df['id_str'].min()
+      max_id_str = df['id_str'].max()
+      print('min: ' + min_id_str + ', max: ' + max_id_str)
+      fn = 'twitter_data_mentions_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
+      df.to_csv("/tmp/" + fn, index=False, encoding='utf-8')
+      print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
+      
+      blob = sumo_bucket.blob("twitter/" + fn)
+      blob.upload_from_filename("/tmp/" + fn)
 
-    update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_mentions')  
-    
+      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_mentions')  
+    else:
+      print ("Downloaded {0} tweets, no mentions updates.".format(tweetCount))
+
   except tweepy.TweepError as e:
     # Just exit if any error
     print("some error : " + str(e))
 
 
-def get_firefox_data(api):
+def get_firefox_reviews(api):
   #get all tweets with id=firefox
 
   # If results from a specific ID onwards are reqd, set since_id to that ID.
@@ -128,9 +134,11 @@ def get_firefox_data(api):
   results = []
   
   try: 
-    #new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended").items()
-    #old_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended", max_id=str(max_id - 1)).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
-    new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended", since_id=str(max_id)).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
+    if max_id is not None:
+      new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended", since_id=str(max_id)).items() # max_id-1 to exclude max_id since that will have already been added in previous pass
+    else:
+      new_tweets = tweepy.Cursor(api.user_timeline, screen_name='@firefox', tweet_mode="extended").items() 
+
     for tweet in new_tweets:
  
       # if in_reply_to_status_id_str has number, then look up that info, else, put blanks for fields reply_text, reply created_at, reply_user_id. we wouldn't now what % goes un-replied anyway so...
@@ -156,17 +164,20 @@ def get_firefox_data(api):
     
     df = pd.DataFrame.from_records(results, columns=["id_str","created_at","full_text","user_id","in_reply_to_status_id_str","in_reply_to_status_text","in_reply_to_status_created_at","in_reply_to_status_user_id"] )
     #  df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
-    min_id_str = df['id_str'].min()
-    max_id_str = df['id_str'].max()
-    print('min: ' + min_id_str + ', max: ' + max_id_str)
-    fn = 'twitter_data_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
-    df.to_csv("/tmp/" + fn, index=False)
-    print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
-    
-    blob = sumo_bucket.blob("twitter/" + fn)
-    blob.upload_from_filename("/tmp/" + fn)
 
-    update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_reviews')  
+    if df.shape[0] > 0:
+      min_id_str = df['id_str'].min()
+      max_id_str = df['id_str'].max()
+      fn = 'twitter_data_' + str(min_id_str) + "_to_" + str(max_id_str) + '.csv'
+      df.to_csv("/tmp/" + fn, index=False)
+      print ("Downloaded {0} tweets, Saved to {1}".format(tweetCount, fn))
+      
+      blob = sumo_bucket.blob("twitter/" + fn)
+      blob.upload_from_filename("/tmp/" + fn)
+
+      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_reviews')  
+    else:
+      print ("Downloaded {0} tweets, no reviews updates.".format(tweetCount))
     
   except tweepy.TweepError as e:
     # Just exit if any error
@@ -189,6 +200,7 @@ def get_firefox_data(api):
 
 
 def main():
+
   # OAuth process, using the keys and tokens
   #auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
   auth = tweepy.AppAuthHandler(consumer_key, consumer_secret) # appplication handler has higher limits
@@ -200,7 +212,7 @@ def main():
     print ("Can't Authenticate")
     sys.exit(-1)
 
-  get_firefox_data(api)
+  get_firefox_reviews(api)
   get_firefox_mentions(api)
   
   
