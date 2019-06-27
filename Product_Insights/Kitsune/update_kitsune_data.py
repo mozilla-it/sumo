@@ -6,7 +6,6 @@ from google.cloud import storage
 
 def main():
   parser = argparse.ArgumentParser(description="Kitsune sentiment analysis main arguments")
-  parser.add_argument('--projectid', nargs='?', const='.', type=str, help='GCP project id')
 
   parser.add_argument('--indataset', nargs='?', const='.', type=str, help='BigQuery input dataset')
   parser.add_argument('--intable', nargs='?', const='.', type=str, help='BigQuery input table')
@@ -19,8 +18,6 @@ def main():
 
   args = parser.parse_args()
 
-  PROJECT_ID = args.projectid
-
   INPUT_DATASET = args.indataset
   INPUT_TABLE = args.intable
   OUTPUT_DATASET = args.outdataset
@@ -28,8 +25,8 @@ def main():
 
   OUTPUT_BUCKET = args.bucket
 
-  bq_client = bigquery.Client(project=PROJECT_ID)
-  storage_client = storage.Client(project=PROJECT_ID)
+  bq_client = bigquery.Client()
+  storage_client = storage.Client()
 
   process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET)
 
