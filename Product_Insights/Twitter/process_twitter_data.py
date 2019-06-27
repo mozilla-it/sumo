@@ -29,8 +29,8 @@ OUTPUT_BUCKET = 'test-unique-bucket-name'
 
 local_keywords_file = './Product_Insights/Classification/keywords_map.csv'
 
-bq_client = bigquery.Client(project=PROJECT_ID)
-storage_client = storage.Client(project=PROJECT_ID)
+bq_client = bigquery.Client()
+storage_client = storage.Client()
 
 def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
   ''' Return the current time and last time data was previously saved with this scipt '''
