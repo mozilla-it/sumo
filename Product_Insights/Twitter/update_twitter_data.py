@@ -6,7 +6,6 @@ from google.cloud import storage
 
 def main():
   parser = argparse.ArgumentParser(description="Twitter sentiment and classification analysis main arguments")
-  parser.add_argument('--projectid', nargs='?', const='.', type=str, help='GCP project id')
 
   parser.add_argument('--indataset', nargs='?', const='.', type=str, help='BigQuery input dataset')
   parser.add_argument('--intable', nargs='?', const='.', type=str, help='BigQuery input table')
@@ -19,8 +18,6 @@ def main():
                       help='location of csv containing keywords for classification. Only needed initially')
 
   args = parser.parse_args()
-
-  PROJECT_ID = args.projectid
 
   INPUT_DATASET = args.indataset
   INPUT_TABLE = args.intable
