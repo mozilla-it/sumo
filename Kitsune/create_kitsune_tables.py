@@ -73,7 +73,7 @@ def create_kitsune_word_frequencies():
 
 def create_kitsune_sentiment():
   schema = [
-      bigquery.SchemaField('quesiton_id', 'INTEGER', mode='NULLABLE'),
+      bigquery.SchemaField('question_id', 'INTEGER', mode='NULLABLE'),
       bigquery.SchemaField('score', 'FLOAT', mode='NULLABLE',
                            description='Sentiment score from the google language api'),
       bigquery.SchemaField('magnitude', 'FLOAT', mode='NULLABLE',
@@ -91,7 +91,7 @@ def create_kitsune_sentiment():
 
 def create_kitsune_driving_sentiment():
   schema = [
-      bigquery.SchemaField('quesiton_id', 'INTEGER', mode='NULLABLE'),
+      bigquery.SchemaField('question_id', 'INTEGER', mode='NULLABLE'),
       bigquery.SchemaField('topic', 'STRING', mode='NULLABLE',
                            description='The topic field from the Kitsune api')
   ]
