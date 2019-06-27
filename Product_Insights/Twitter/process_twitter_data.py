@@ -47,7 +47,7 @@ def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
 def load_data(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt, limit=None):
   '''Gets data from the input table'''
   query = ('''SELECT * FROM `{0}.{1}` \
-              WHERE `created_at` BETWEEN TIMESTAMP("{2}") AND TIMESTAMP("{3}") \
+              WHERE `created_at` > TIMESTAMP("{2}") AND `created_at` <= TIMESTAMP("{3}") \
               ORDER BY `created_at` ASC''').\
               format(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt)
   if limit:
@@ -199,7 +199,7 @@ def get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file):
 
 def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, local_keywords_file):
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
-  if df is not None:
+  if not df.empty:
     df = get_sentiment(df)
     df = get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file)
     save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
