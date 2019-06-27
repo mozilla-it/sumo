@@ -15,8 +15,8 @@ def create_keywords_map(dataset_name, table_name):
   table = client.create_table(table)
   print('hey')
 
-def main():
+def main(OUTPUT_DATASET, OUTPUT_TABLE):
   create_keywords_map(OUTPUT_DATASET, OUTPUT_TABLE)
 
 if __name__ == '__main__':
-  main()
+  main(OUTPUT_DATASET, OUTPUT_TABLE)
