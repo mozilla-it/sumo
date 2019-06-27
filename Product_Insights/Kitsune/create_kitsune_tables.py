@@ -38,8 +38,8 @@ def create_kitsune_sentiment(dataset_name, table_name):
   table = client.create_table(table)
 
 
-def main():
+def main(OUTPUT_DATASET, OUTPUT_TABLE):
   create_kitsune_sentiment(OUTPUT_DATASET, OUTPUT_TABLE)
 
 if __name__ == '__main__':
-  main()
+  main(OUTPUT_DATASET, OUTPUT_TABLE)
