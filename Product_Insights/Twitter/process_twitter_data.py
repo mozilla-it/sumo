@@ -182,7 +182,6 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
 
 def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE):
   start_dt, end_dt = get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE)
-  #df = load_data(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt, limit=500)
   df = load_data(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt)
   return(df, start_dt, end_dt)
 
