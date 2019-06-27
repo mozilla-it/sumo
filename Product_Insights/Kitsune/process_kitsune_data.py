@@ -10,9 +10,6 @@ from Product_Insights.Sentiment.utils \
        import gc_detect_language, gc_sentiment, discretize_sentiment
 from Product_Insights.Kitsune.create_kitsune_tables \
         import create_kitsune_sentiment
-#df = pd.read_csv('../data/kitsune.csv')
-
-PROJECT_ID = 'marketing-1003'
 
 INPUT_DATASET = 'sumo_views'
 INPUT_TABLE = 'kitsune_questions_view'
@@ -22,8 +19,8 @@ OUTPUT_TABLE = 'kitsune_sentiment'
 
 OUTPUT_BUCKET = 'test-unique-bucket-name'
 
-bq_client = bigquery.Client(project=PROJECT_ID)
-storage_client = storage.Client(project=PROJECT_ID)
+bq_client = bigquery.Client()
+storage_client = storage.Client()
 
 def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
   ''' Return the current time and last time data was previously saved with this scipt '''
