@@ -1,8 +1,6 @@
 # BQ table empty creation and schema defintions for GA tables
 from google.cloud import bigquery
 client = bigquery.Client()
-OUTPUT_DATASET='analyse_and_tal'
-OUTPUT_TABLE='twitter_sentiment'
 
 def create_twitter_sentiment(dataset_name, table_name):
   schema = [
@@ -31,8 +29,8 @@ def create_twitter_sentiment(dataset_name, table_name):
   table = bigquery.Table(table_ref, schema=schema)
   table = client.create_table(table)
 
-def main():
+def main(OUTPUT_DATASET, OUTPUT_TABLE):
   create_twitter_sentiment(OUTPUT_DATASET, OUTPUT_TABLE)
 
 if __name__ == '__main__':
-  main()
+  main(OUTPUT_DATASET, OUTPUT_TABLE)
