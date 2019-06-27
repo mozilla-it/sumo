@@ -1,5 +1,5 @@
 import datetime
-import fileinput
+import time
 
 import pandas as pd
 
@@ -64,12 +64,18 @@ def language_analysis(df):
   d_lang = {}
   d_confidence = {}
   for i, row in df.iterrows():
+    while True:
       try:
           confidence, language = gc_detect_language(row.full_text)
           d_lang[row.id_str] = language
           d_confidence[row.id_str] = confidence
       except Forbidden as e:
-          print(e)
+        print(e)
+        print('Waiting 100 seconds due to rate-limit constraint')
+        time.sleep(100)
+        continue
+      break
+
 
   df[u'language'] = df['id_str'].map(d_lang)
   df[u'confidence'] = df['id_str'].map(d_confidence)
@@ -89,10 +95,18 @@ def run_sentiment_analysis(df):
   sentiment_score = {}
   sentiment_magnitude = {}
   for i, row in df.iterrows():
-      text = row.full_text
-      score, magnitude = gc_sentiment(text)
-      sentiment_score[row.id_str] = score
-      sentiment_magnitude[row.id_str] = magnitude
+    while True:
+      try:
+        text = row.full_text
+        score, magnitude = gc_sentiment(text)
+        sentiment_score[row.id_str] = score
+        sentiment_magnitude[row.id_str] = magnitude
+      except Forbidden as e:
+        print(e)
+        print('Waiting 100 seconds due to rate-limit constraint')
+        time.sleep(100)
+        continue
+      break
 
 
   df[u'score'] = df['id_str'].map(sentiment_score)
