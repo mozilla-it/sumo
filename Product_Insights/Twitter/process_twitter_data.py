@@ -1,4 +1,5 @@
 import datetime
+import fileinput
 
 import pandas as pd
 
@@ -164,20 +165,19 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
   '''Saves the dataframe to a gs bucket and a bq table'''
 
   bucket = storage_client.get_bucket(OUTPUT_BUCKET)
+  dataset_ref = bq_client.dataset(OUTPUT_DATASET)
+  table_ref = dataset_ref.table(OUTPUT_TABLE)
 
   fn = 'twitter_sentiment_' + start_dt[0:10] + "_to_" + end_dt[0:10] + '.json'
-  
-  df = df.set_index('id_str')
+  uri = "gs://{}/twitter/".format(bucket.name)
 
-  df.to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
+  df = df.set_index('id_str')
+  df.apply(lambda x: x.dropna(), axis=1).to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
 
   blob = bucket.blob("twitter/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  dataset_ref = bq_client.dataset(OUTPUT_DATASET)
-  table_ref = dataset_ref.table(OUTPUT_TABLE)
-
-  update_bq_table("gs://{}/twitter/".format(bucket.name), fn, table_ref) 
+  update_bq_table(uri, fn, table_ref) 
   move_blob_to_processed(bucket,fn)
 
 def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE):
