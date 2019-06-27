@@ -28,18 +28,6 @@ def main():
 
   KEYWORDS_FILE = args.keywordsmap
 
-
-  # PROJECT_ID = 'marketing-1003'
-
-  # INPUT_DATASET = 'sumo_views'
-  # INPUT_TABLE = 'twitter_mentions_view'
-  # OUTPUT_DATASET = 'analyse_and_tal'
-  # OUTPUT_TABLE = 'twitter_sentiment'
-
-  # OUTPUT_BUCKET = 'test-unique-bucket-name'
-
-  #KEYWORDS_FILE = './Product_Insights/Classification/keywords_map.csv'
-
   bq_client = bigquery.Client(project=PROJECT_ID)
   storage_client = storage.Client(project=PROJECT_ID)
 
