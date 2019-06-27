@@ -2,9 +2,8 @@ from google.cloud import bigquery
 from google.cloud import storage
 from google.cloud.exceptions import Conflict
 
-PROJECT_ID = 'marketing-1003'
-bq_client = bigquery.Client(project=PROJECT_ID)
-storage_client = storage.Client(project=PROJECT_ID)
+bq_client = bigquery.Client()
+storage_client = storage.Client()
 dataset_ref = bq_client.dataset('analyse_and_tal')
 
 keywords_file = './Product_Insights/Classification/keywords_map.csv'
