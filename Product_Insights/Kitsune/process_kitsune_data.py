@@ -11,14 +11,6 @@ from Product_Insights.Sentiment.utils \
 from Product_Insights.Kitsune.create_kitsune_tables \
         import create_kitsune_sentiment
 
-INPUT_DATASET = 'sumo_views'
-INPUT_TABLE = 'kitsune_questions_view'
-
-OUTPUT_DATASET = 'analyse_and_tal'
-OUTPUT_TABLE = 'kitsune_sentiment'
-
-OUTPUT_BUCKET = 'test-unique-bucket-name'
-
 bq_client = bigquery.Client()
 storage_client = storage.Client()
 
