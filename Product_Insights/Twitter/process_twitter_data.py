@@ -17,16 +17,6 @@ from Product_Insights.Sentiment.utils \
 from Product_Insights.Twitter.create_twitter_tables \
         import create_twitter_sentiment
 
-PROJECT_ID = 'marketing-1003'
-
-INPUT_DATASET = 'sumo_views'
-INPUT_TABLE = 'twitter_mentions_view'
-
-OUTPUT_DATASET = 'analyse_and_tal'
-OUTPUT_TABLE = 'twitter_sentiment'
-
-OUTPUT_BUCKET = 'test-unique-bucket-name'
-
 local_keywords_file = './Product_Insights/Classification/keywords_map.csv'
 
 bq_client = bigquery.Client()
