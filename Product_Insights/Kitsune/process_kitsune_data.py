@@ -129,8 +129,8 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
   
   df = df.set_index('question_id')
 
-  df.to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
-
+  df.apply(lambda x: x.dropna(), axis=1).to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
+  
   blob = bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
