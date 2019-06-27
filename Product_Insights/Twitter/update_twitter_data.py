@@ -28,9 +28,6 @@ def main():
 
   KEYWORDS_FILE = args.keywordsmap
 
-  bq_client = bigquery.Client(project=PROJECT_ID)
-  storage_client = storage.Client(project=PROJECT_ID)
-
   process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, KEYWORDS_FILE)
 
 if __name__ == '__main__':
