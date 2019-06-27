@@ -24,9 +24,6 @@ def main():
 
   OUTPUT_BUCKET = args.bucket
 
-  bq_client = bigquery.Client()
-  storage_client = storage.Client()
-
   process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET)
 
 if __name__ == '__main__':
