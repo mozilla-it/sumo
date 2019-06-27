@@ -15,7 +15,6 @@ def main():
 
   parser.add_argument('--bucket', nargs='?', const='.', type=str, help='which gs bucket to save data to')
 
-
   args = parser.parse_args()
 
   INPUT_DATASET = args.indataset
