@@ -91,7 +91,7 @@ def process_data(data, end_dt):
 
     for region in data.keys():
         q, related_qs = data[region]
-        q = clean_queries(q)
+        q = clean_queries(q, region, end_dt)
         df_queries = df_queries.append(q)
 
         for query in related_qs.keys():
