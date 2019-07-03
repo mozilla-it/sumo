@@ -32,6 +32,7 @@ setup(name='sumo',
           'SurveyGizmo',
           'gcsfs',
           'python-dateutil',
+          'pytrends'
       ],
       test_suite='nose.collector',
       tests_require=['nose', 'nose-cover3'],
