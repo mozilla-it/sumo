@@ -15,7 +15,7 @@ setup(name='sumo',
       author='Nancy Wong',
       author_email='nawong@mozilla.com',
       license='...',
-      packages=['SurveyGizmo','GooglePlaystore','ReleaseCalendar','Kitsune','GoogleAnalytics','Twitter'],
+      packages=['SurveyGizmo','ReleaseCalendar','ReleaseCalendar','Kitsune','GoogleAnalytics','Twitter','Product_Insights'],
       install_requires=[
           'requests',
           'grpcio>=1.8.2',
