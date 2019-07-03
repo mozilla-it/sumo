@@ -57,7 +57,7 @@ def get_gtrend(keyword, geo='', timeframe='now 7-d'):
     return(rising_queries, rising_queries_interest)
 
 def get_data(start_dt, end_dt):
-    geo_codes = ['', 'US', 'DE', 'IN', 'ES', 'ID']
+    geo_codes = ['', 'US', 'DE', 'IN', 'FR', 'RU', 'IT', 'BR', 'PL', 'CN', 'NL', 'JP', 'ES', 'ID']
     #Adding 'T00' ensures hourly resolution on result
     timeframe = start_dt +'T00' + ' ' + end_dt+'T00'
     data = {}
