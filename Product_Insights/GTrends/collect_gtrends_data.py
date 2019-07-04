@@ -98,6 +98,7 @@ def process_data(data, end_dt):
             related_query = related_qs[query]
             related_query = clean_related_queries(related_query, query, region, end_dt)
             df_queries_ts = df_queries_ts.append(related_query)
+    df_queries_ts = df_queries_ts[['query', 'query_key', 'relative_search_volume', 'timestamp']]
     return(df_queries, df_queries_ts)
 
 def update_bq_table(uri, fn, table_ref):
