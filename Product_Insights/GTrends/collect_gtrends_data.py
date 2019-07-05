@@ -45,14 +45,25 @@ def get_collection_period(last_update):
 def get_gtrend(keyword, geo='', timeframe='now 7-d'):
     pytrends = TrendReq()
     pytrends.build_payload([keyword],  geo=geo, timeframe=timeframe)
+    while True:
+      try:
+        results = pytrends.related_queries()
+        rising_queries = results[keyword]['rising']
+        rising_queries_interest = {}
+      except:
+        time.sleep(60)
+        continue
+      break
 
-    results = pytrends.related_queries()
-    rising_queries = results[keyword]['rising']
-    
-    rising_queries_interest = {}
     for i, row in results[keyword]['rising'].iterrows():
-        pytrends.build_payload([row.query],  geo=geo, timeframe=timeframe) 
-        rising_queries_interest[row.query] = pytrends.interest_over_time()
+        pytrends.build_payload([row.query],  geo=geo, timeframe=timeframe)
+        while True: 
+          try:
+            rising_queries_interest[row.query] = pytrends.interest_over_time()
+          except:
+            time.sleep(60)
+            continue
+          break
 
     return(rising_queries, rising_queries_interest)
 
@@ -98,6 +109,7 @@ def process_data(data, end_dt):
             related_query = related_qs[query]
             related_query = clean_related_queries(related_query, query, region, end_dt)
             df_queries_ts = df_queries_ts.append(related_query)
+    df_queries_ts = df_queries_ts[['query', 'query_key', 'relative_search_volume', 'timestamp']]
     return(df_queries, df_queries_ts)
 
 def update_bq_table(uri, fn, table_ref):
