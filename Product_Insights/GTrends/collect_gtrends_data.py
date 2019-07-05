@@ -45,14 +45,25 @@ def get_collection_period(last_update):
 def get_gtrend(keyword, geo='', timeframe='now 7-d'):
     pytrends = TrendReq()
     pytrends.build_payload([keyword],  geo=geo, timeframe=timeframe)
+    while True:
+      try:
+        results = pytrends.related_queries()
+        rising_queries = results[keyword]['rising']
+        rising_queries_interest = {}
+      except:
+        time.sleep(60)
+        continue
+      break
 
-    results = pytrends.related_queries()
-    rising_queries = results[keyword]['rising']
-    
-    rising_queries_interest = {}
     for i, row in results[keyword]['rising'].iterrows():
-        pytrends.build_payload([row.query],  geo=geo, timeframe=timeframe) 
-        rising_queries_interest[row.query] = pytrends.interest_over_time()
+        pytrends.build_payload([row.query],  geo=geo, timeframe=timeframe)
+        while True: 
+          try:
+            rising_queries_interest[row.query] = pytrends.interest_over_time()
+          except:
+            time.sleep(60)
+            continue
+          break
 
     return(rising_queries, rising_queries_interest)
 
