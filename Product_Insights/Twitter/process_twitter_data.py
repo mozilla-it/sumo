@@ -69,7 +69,7 @@ def language_analysis(df):
           confidence, language = gc_detect_language(row.full_text)
           d_lang[row.id_str] = language
           d_confidence[row.id_str] = confidence
-      except Forbidden as e:
+      except Exception as e:
         print(e)
         print('Waiting 100 seconds due to rate-limit constraint')
         time.sleep(100)
@@ -101,7 +101,7 @@ def run_sentiment_analysis(df):
         score, magnitude = gc_sentiment(text)
         sentiment_score[row.id_str] = score
         sentiment_magnitude[row.id_str] = magnitude
-      except Forbidden as e:
+      except Exception as e:
         print(e)
         print('Waiting 100 seconds due to rate-limit constraint')
         time.sleep(100)
