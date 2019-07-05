@@ -5,7 +5,7 @@ import pandas as pd
 
 from google.cloud import bigquery
 from google.cloud import storage
-from google.cloud.exceptions import NotFound, Forbidden
+from google.cloud.exceptions import NotFound, Forbidden, TooManyRequests
 
 from Product_Insights.Sentiment.utils \
        import gc_detect_language, gc_sentiment, discretize_sentiment
@@ -62,7 +62,7 @@ def language_analysis(df):
         confidence, language = gc_detect_language(row.title + row.question_content)
         d_lang[row.question_id] = language
         d_confidence[row.question_id] = confidence
-      except Exception as e:
+      except (Forbidden, TooManyRequests) as e:
         print(e)
         print('Waiting 100 seconds due to rate-limit constraint')
         time.sleep(100)
@@ -92,7 +92,7 @@ def run_sentiment_analysis(df):
         score, magnitude = gc_sentiment(text, type='HTML')
         sentiment_score[row.question_id] = score
         sentiment_magnitude[row.question_id] = magnitude
-      except Exception as e:
+      except (Forbidden, TooManyRequests) as e:
         print(e)
         print('Waiting 100 seconds due to rate-limit constraint')
         time.sleep(100)
