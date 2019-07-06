@@ -49,16 +49,17 @@ def get_gtrend(keyword, geo='', timeframe='now 7-d'):
       try:
         results = pytrends.related_queries()
         rising_queries = results[keyword]['rising']
-        rising_queries_interest = {}
       except:
         time.sleep(60)
         continue
       break
 
-    for i, row in results[keyword]['rising'].iterrows():
-        pytrends.build_payload([row.query],  geo=geo, timeframe=timeframe)
+    rising_queries_interest = {}
+    if not rising_queries is None:
+      for i, row in results[keyword]['rising'].iterrows():
         while True: 
           try:
+            pytrends.build_payload([row.query],  geo=geo, timeframe=timeframe)
             rising_queries_interest[row.query] = pytrends.interest_over_time()
           except:
             time.sleep(60)
@@ -102,14 +103,18 @@ def process_data(data, end_dt):
 
     for region in data.keys():
         q, related_qs = data[region]
-        q = clean_queries(q, region, end_dt)
-        df_queries = df_queries.append(q)
+        if not q is None:
+          q = clean_queries(q, region, end_dt)
+          df_queries = df_queries.append(q)
 
-        for query in related_qs.keys():
-            related_query = related_qs[query]
-            related_query = clean_related_queries(related_query, query, region, end_dt)
-            df_queries_ts = df_queries_ts.append(related_query)
-    df_queries_ts = df_queries_ts[['query', 'query_key', 'relative_search_volume', 'timestamp']]
+          for query in related_qs.keys():
+              related_query = related_qs[query]
+              related_query = clean_related_queries(related_query, query, region, end_dt)
+              df_queries_ts = df_queries_ts.append(related_query)
+    try:
+      df_queries_ts = df_queries_ts[['query', 'query_key', 'relative_search_volume', 'timestamp']]
+    except KeyError:
+      df_queries_ts = None
     return(df_queries, df_queries_ts)
 
 def update_bq_table(uri, fn, table_ref):
@@ -161,4 +166,5 @@ def collect_data(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS, OUTPUT_B
         data = get_data(start_dt, end_dt)
         df_queries, df_queries_ts = process_data(data, end_dt)
         save_results(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_BUCKET, df_queries, start_dt, end_dt) 
-        save_results(OUTPUT_DATASET, OUTPUT_TABLE_TS, OUTPUT_BUCKET, df_queries_ts, start_dt, end_dt) 
+        if df_queries_ts:
+          save_results(OUTPUT_DATASET, OUTPUT_TABLE_TS, OUTPUT_BUCKET, df_queries_ts, start_dt, end_dt) 
