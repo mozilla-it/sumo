@@ -20,14 +20,15 @@ bucket = os.environ.get('BUCKET','moz-it-data-sumo')
 
 sumo_bucket = storage_client.get_bucket(bucket)
 
-def update_bq_table(uri, fn, table_name):
+def update_bq_table(uri, fn, table_name, table_schema):
 
   table_ref = dataset_ref.table(table_name)
   job_config = bigquery.LoadJobConfig()
   job_config.write_disposition = "WRITE_APPEND"
   job_config.source_format = bigquery.SourceFormat.CSV
   job_config.skip_leading_rows = 1
-  job_config.autodetect = True
+  job_config.autodetect = False
+  job_config.schema = table_schema
   
   orig_rows =  bq_client.get_table(table_ref).num_rows
 
@@ -101,7 +102,14 @@ def get_firefox_mentions(api):
       blob = sumo_bucket.blob("twitter/" + fn)
       blob.upload_from_filename("/tmp/" + fn)
 
-      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_mentions')  
+      s = [
+        bigquery.SchemaField("id_str", "INTEGER"),
+        bigquery.SchemaField("created_at", "TIMESTAMP"),
+        bigquery.SchemaField("full_text", "STRING"),
+        bigquery.SchemaField("user_id", "INTEGER"),
+        bigquery.SchemaField("in_reply_to_status_id_str", "INTEGER"),
+      ]
+      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_mentions', s)  
     else:
       print ("Downloaded {0} tweets, no mentions updates.".format(tweetCount))
 
@@ -175,7 +183,17 @@ def get_firefox_reviews(api):
       blob = sumo_bucket.blob("twitter/" + fn)
       blob.upload_from_filename("/tmp/" + fn)
 
-      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_reviews')  
+      s = [
+        bigquery.SchemaField("id_str", "INTEGER"),
+        bigquery.SchemaField("created_at", "TIMESTAMP"),
+        bigquery.SchemaField("full_text", "STRING"),
+        bigquery.SchemaField("user_id", "INTEGER"),
+        bigquery.SchemaField("in_reply_to_status_id_str", "INTEGER"),
+        bigquery.SchemaField("in_reply_to_status_text", "STRING"),
+        bigquery.SchemaField("in_reply_to_status_created_at", "TIMESTAMP"),
+        bigquery.SchemaField("in_reply_to_status_user_id", "INTEGER"),
+      ]
+      update_bq_table("gs://{}/twitter/".format(bucket), fn, 'twitter_reviews', s)  
     else:
       print ("Downloaded {0} tweets, no reviews updates.".format(tweetCount))
     
