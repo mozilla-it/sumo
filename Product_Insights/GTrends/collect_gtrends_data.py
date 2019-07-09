@@ -166,5 +166,5 @@ def collect_data(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS, OUTPUT_B
         data = get_data(start_dt, end_dt)
         df_queries, df_queries_ts = process_data(data, end_dt)
         save_results(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_BUCKET, df_queries, start_dt, end_dt) 
-        if df_queries_ts:
+        if not df_queries_ts.empty:
           save_results(OUTPUT_DATASET, OUTPUT_TABLE_TS, OUTPUT_BUCKET, df_queries_ts, start_dt, end_dt) 
