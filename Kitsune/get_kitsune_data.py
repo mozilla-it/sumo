@@ -84,14 +84,16 @@ def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
-def update_bq_table(uri, fn, table_name):
+def update_bq_table(uri, fn, table_name, table_schema):
 
   table_ref = dataset_ref.table(table_name)
   job_config = bigquery.LoadJobConfig()
   job_config.write_disposition = "WRITE_APPEND"
   job_config.source_format = bigquery.SourceFormat.CSV
   job_config.skip_leading_rows = 1
-  job_config.autodetect = True
+
+  job_config.autodetect = False
+  job_config.schema = table_schema
   
   orig_rows =  bq_client.get_table(table_ref).num_rows
 
@@ -139,7 +141,20 @@ def update_answers():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_answers_raw')  
+  s = [
+        bigquery.SchemaField("answer_id", "INTEGER"),
+        bigquery.SchemaField("question_id", "INTEGER"),
+        bigquery.SchemaField("answer_content", "STRING"),
+        bigquery.SchemaField("created_date", "TIMESTAMP"),
+        bigquery.SchemaField("creator_username", "STRING"),
+        bigquery.SchemaField("updated", "TIMESTAMP"),
+        bigquery.SchemaField("updated_by", "STRING"),
+        bigquery.SchemaField("is_spam", "BOOLEAN"),
+        bigquery.SchemaField("num_helpful_votes", "INTEGER"),
+        bigquery.SchemaField("num_unhelpful_votes", "INTEGER"),
+  ]
+
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_answers_raw', s)  
   
   print(datetime.now()-start)
   
@@ -187,7 +202,29 @@ def update_questions():
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_questions_raw')  
+  s = [
+        bigquery.SchemaField("question_id", "INTEGER"),
+        bigquery.SchemaField("question_content", "STRING"),
+        bigquery.SchemaField("created_date", "TIMESTAMP"),
+        bigquery.SchemaField("creator_username", "STRING"),
+        bigquery.SchemaField("updated", "TIMESTAMP"),
+        bigquery.SchemaField("updated_by", "STRING"),
+        bigquery.SchemaField("is_solved", "BOOLEAN"),
+        bigquery.SchemaField("locale", "STRING"),
+        bigquery.SchemaField("product", "STRING"),
+        bigquery.SchemaField("title", "STRING"),
+        bigquery.SchemaField("topic", "STRING"),
+        bigquery.SchemaField("solution", "INTEGER"),
+        bigquery.SchemaField("solved_by", "STRING"),
+        bigquery.SchemaField("num_votes", "INTEGER"),
+        bigquery.SchemaField("num_votes_past_week", "INTEGER"),
+        bigquery.SchemaField("last_answer", "INTEGER"),
+        bigquery.SchemaField("metadata_array", "STRING"),
+        bigquery.SchemaField("tags_array", "STRING"),
+        bigquery.SchemaField("answers", "STRING"),
+  ]
+  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_questions_raw', s)  
   
   print(datetime.now()-start)
 		
@@ -260,8 +297,14 @@ def analyze_word_freq():
   
   blob = sumo_bucket.blob("kitsune/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
-
-  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_word_frequencies')  
+  
+  s = [
+        bigquery.SchemaField("kitsune_dt", "DATE"),
+        bigquery.SchemaField("kitsune_freq", "INTEGER"),
+        bigquery.SchemaField("kitsune_word", "STRING"),
+  ]	
+  
+  update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_word_frequencies', s)  
 
 
 def main():
