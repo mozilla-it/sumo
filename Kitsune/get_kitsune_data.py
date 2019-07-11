@@ -299,9 +299,9 @@ def analyze_word_freq():
   blob.upload_from_filename("/tmp/" + fn)
   
   s = [
-        bigquery.SchemaField("kitsune_dt", "DATE"),
-        bigquery.SchemaField("kitsune_freq", "INTEGER"),
         bigquery.SchemaField("kitsune_word", "STRING"),
+        bigquery.SchemaField("kitsune_freq", "INTEGER"),
+        bigquery.SchemaField("kitsune_dt", "DATE"),
   ]	
   
   update_bq_table("gs://{}/kitsune/".format(bucket), fn, 'kitsune_word_frequencies', s)  
