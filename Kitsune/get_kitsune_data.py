@@ -292,6 +292,8 @@ def analyze_word_freq():
     df = df.append(df_tmp)
     
   df['kitsune_freq'] = df['kitsune_freq'].astype(int)
+  cols = ['kitsune_word','kitsune_freq','kitsune_dt']
+  df = df[cols]
   print(df)
   df.to_csv("/tmp/" + fn, index=False)
   
