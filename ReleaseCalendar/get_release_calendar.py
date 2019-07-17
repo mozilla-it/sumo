@@ -70,26 +70,27 @@ def calc_durations(release_row, release_date, weeks_out):
   return results
 
 
-def get_release_calendar_row(release, row, weeks_out):
+def get_release_calendar_row(release, row, weeks_in, weeks_out):
 
   release_datetime = datetime.strptime(row['date'], '%Y-%m-%d')
   end_date = release_datetime + timedelta(weeks=weeks_out)
+  start_date = release_datetime - timedelta(weeks=weeks_in)
 
   results = []
 
+  for dt in daterange(start_date, release_datetime):
+    num_days = (dt-release_datetime).days
+    results.append([release, row['product'], row['category'], row['build_number'], row['date'], row['version'],
+          row.get('description',''), row.get('is_security_driven',False),
+          dt.strftime('%Y-%m-%d'), num_days+1, math.floor(num_days/7)+1])
+    print('num_days: ' + str(num_days+1) + ", week: " + str(math.floor(num_days/7)+1))
+
   for dt in daterange(release_datetime, end_date):
     num_days = (dt-release_datetime).days
-    #release_row_tmp = list(release_row)
-    #print(release_row_tmp + [dt.strftime('%Y-%m-%d'), num_days+1, math.floor(num_days/7)+1])
-    #results.append(release_row_tmp + [dt.strftime('%Y-%m-%d'), num_days+1, math.floor(num_days/7)+1])
     results.append([release, row['product'], row['category'], row['build_number'], row['date'], row['version'],
           row.get('description',''), row.get('is_security_driven',False),
           dt.strftime('%Y-%m-%d'), num_days+1, math.floor(num_days/7)+1])
 
-  #release_row = [release, row['product'], row['category'], row['build_number'], row['date'], row['version'],
-  #        row.get('description',''), row.get('is_security_driven',False)]
-  #return calc_durations(release_row, row['date'], 8)
-  
   #print(results)
   return results
 			
@@ -98,7 +99,9 @@ def update_release_calendar(url_version, product):
   
   start=datetime.now()
   
+  weeks_in=4
   weeks_out=8
+  filter_min_version = 57
   fileout = "/tmp/release_calendar.csv"
   
   url = base_url + "/" + url_version + "/" + product + ".json"
@@ -119,8 +122,10 @@ def update_release_calendar(url_version, product):
     raw = response.json()
     for i in raw['releases']:
       #print(i)
-      #print(raw['releases'][i]['category'])
-      results.append(get_release_calendar_row(i,raw['releases'][i],weeks_out))
+      version_major = (raw['releases'][i]['version']).split('.')[0]
+      if int(version_major)>=filter_min_version:
+        print(version_major)
+        results.append(get_release_calendar_row(i,raw['releases'][i],weeks_in, weeks_out))
 		
     logger.info('returning results')
 
@@ -137,8 +142,7 @@ def update_release_calendar(url_version, product):
 
   else:
     print('[!] HTTP {0} calling [{1}]'.format(response.status_code, api_url)) # 401 unauthorized
-    #return None
-      
+
   print(datetime.now()-start)
 
 def main():
