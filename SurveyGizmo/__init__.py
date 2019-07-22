@@ -4,6 +4,7 @@ import base64
 import logging
 import pytz
 import datetime as dt
+import sys
 from google.cloud import bigquery
 bq_client = bigquery.Client()
 
@@ -100,7 +101,12 @@ def get_survey_data(api_url_base, params):
 		for page in range(2,total_pages):
 			params['page'] = str(page)
 			#print(page)
-			response = requests.get(api_url, params=params)
+			try:
+				response = requests.get(api_url, params=params)
+			except Exception as e:
+				print(e)
+				print(sys.exc_info()[0])
+				continue
 			
 			if response.status_code == 200:
 				
