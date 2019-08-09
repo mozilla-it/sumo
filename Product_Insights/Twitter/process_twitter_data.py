@@ -18,7 +18,7 @@ from Product_Insights.Sentiment.utils \
 from Product_Insights.Twitter.create_twitter_tables \
         import create_twitter_sentiment
 
-local_keywords_file = './Product_Insights/Classification/keywords_map.csv'
+local_keywords_file = './Product_Insights/Classification/keywords_map.tsv'
 
 bq_client = bigquery.Client()
 storage_client = storage.Client()
@@ -129,6 +129,14 @@ def get_keywords_map(OUTPUT_DATASET, OUTPUT_BUCKET, local_keywords_file):
     upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, table_name)
     query_job = bq_client.query(query)
     keywords_map = query_job.to_dataframe()
+
+  # Test if local keywords file matches bq table, if not overwrite table 
+  local_keywords_map = pd.read_csv(local_keywords_file, sep='\t')  
+  if not local_keywords_map.equals(keywords_map):
+    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, table_name)
+    query_job = bq_client.query(query)
+    keywords_map = query_job.to_dataframe()
+
   return(keywords_map)
 
 def determine_topics(df, keywords_map):
