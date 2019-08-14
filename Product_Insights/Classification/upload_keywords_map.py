@@ -4,7 +4,7 @@ from google.cloud.exceptions import Conflict
 
 bq_client = bigquery.Client()
 storage_client = storage.Client()
-dataset_ref = bq_client.dataset('analyse_and_tal')
+dataset_ref = bq_client.dataset('sumo')
 
 bucket_name = 'classification-test'
     
