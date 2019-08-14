@@ -87,8 +87,7 @@ def filter_language(df, lang='en', lang_confidence=0.8):
   df = df.drop(['language', 'confidence'], axis=1)
   if df.empty:
     print('No data in dataframe after language filter')
-  else:
-    return(df)
+  return(df)
 
 def run_sentiment_analysis(df):
   '''Estimates the sentiment of each tweet'''
@@ -210,7 +209,8 @@ def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABL
 def get_sentiment(df):
   df = language_analysis(df)
   df = filter_language(df)
-  df = run_sentiment_analysis(df)
+  if not df.empty:
+    df = run_sentiment_analysis(df)
   return(df)
 
 def get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file):
@@ -222,5 +222,6 @@ def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPU
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if not df.empty:
     df = get_sentiment(df)
-    df = get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file)
-    save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
+    if not df.empty:
+      df = get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file)
+      save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
