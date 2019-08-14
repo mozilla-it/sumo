@@ -6,7 +6,6 @@ bq_client = bigquery.Client()
 storage_client = storage.Client()
 dataset_ref = bq_client.dataset('analyse_and_tal')
 
-keywords_file = './Product_Insights/Classification/keywords_map.tsv'
 bucket_name = 'classification-test'
     
 def upload_keywords_map(bucket_name, local_file, table_name):
