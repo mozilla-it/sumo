@@ -22,7 +22,6 @@ def create_gtrends_timeseries(dataset_name, table_name):
       bigquery.SchemaField('query_key', 'STRING', mode='NULLABLE'),
       bigquery.SchemaField('timestamp', 'TIMESTAMP', mode='NULLABLE'),
       bigquery.SchemaField('original_query', 'STRING', mode='NULLABLE'),
-      bigquery.SchemaField('translated_query', 'STRING', mode='NULLABLE'),
       bigquery.SchemaField('relative_search_volume', 'INTEGER', mode='NULLABLE'),
   ]
   dataset_ref = client.dataset(dataset_name)
