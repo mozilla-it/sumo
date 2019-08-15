@@ -6,7 +6,8 @@ def create_gtrends_queries(dataset_name, table_name):
   schema = [
       bigquery.SchemaField('update_date', 'DATE', mode='NULLABLE'),
       bigquery.SchemaField('region', 'STRING', mode='NULLABLE'),
-      bigquery.SchemaField('query', 'STRING', mode='NULLABLE'),
+      bigquery.SchemaField('original_query', 'STRING', mode='NULLABLE'),
+      bigquery.SchemaField('translated_query', 'STRING', mode='NULLABLE'),
       bigquery.SchemaField('query_key_ts', 'STRING', mode='NULLABLE'),
       bigquery.SchemaField('search_increase_pct', 'INTEGER', mode='NULLABLE'),
   ]
@@ -20,7 +21,8 @@ def create_gtrends_timeseries(dataset_name, table_name):
   schema = [
       bigquery.SchemaField('query_key', 'STRING', mode='NULLABLE'),
       bigquery.SchemaField('timestamp', 'TIMESTAMP', mode='NULLABLE'),
-      bigquery.SchemaField('query', 'STRING', mode='NULLABLE'),
+      bigquery.SchemaField('original_query', 'STRING', mode='NULLABLE'),
+      bigquery.SchemaField('translated_query', 'STRING', mode='NULLABLE'),
       bigquery.SchemaField('relative_search_volume', 'INTEGER', mode='NULLABLE'),
   ]
   dataset_ref = client.dataset(dataset_name)
