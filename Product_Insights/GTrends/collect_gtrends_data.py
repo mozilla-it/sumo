@@ -5,6 +5,7 @@ import pandas as pd
 
 from google.cloud import bigquery
 from google.cloud import storage
+from google.cloud import translate
 from google.cloud.exceptions import NotFound
 from pytrends.request import TrendReq
 
@@ -13,6 +14,7 @@ from Product_Insights.GTrends.create_gtrends_tables \
 
 bq_client = bigquery.Client()
 storage_client = storage.Client()
+translate_client = translate.Client()
 
 def check_last_update(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS):
   qry_max_date = ("SELECT max(update_date) max_date FROM {0}.{1}")\
