@@ -6,7 +6,7 @@ bq_client = bigquery.Client()
 storage_client = storage.Client()
 dataset_ref = bq_client.dataset('analyse_and_tal')
 
-keywords_file = './Product_Insights/Classification/keywords_map.csv'
+keywords_file = './Product_Insights/Classification/keywords_map.tsv'
 bucket_name = 'classification-test'
     
 def upload_keywords_map(bucket_name, local_file, table_name):
@@ -25,6 +25,8 @@ def update_bq_table(uri, fn, table_name):
 
   table_ref = dataset_ref.table(table_name)
   job_config = bigquery.LoadJobConfig()
+  job_config.write_disposition = "WRITE_TRUNCATE"
+  job_config.skip_leading_rows = 1
   job_config.source_format = bigquery.SourceFormat.CSV
   job_config.field_delimiter = '\t'
   
