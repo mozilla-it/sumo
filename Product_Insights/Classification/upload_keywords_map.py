@@ -4,9 +4,9 @@ from google.cloud.exceptions import Conflict
 
 bq_client = bigquery.Client()
 storage_client = storage.Client()
-dataset_ref = bq_client.dataset('analyse_and_tal')
+dataset_ref = bq_client.dataset('sumo')
 
-keywords_file = './Product_Insights/Classification/keywords_map.tsv'
+#keywords_file = './Product_Insights/Classification/keywords_map.tsv'
 bucket_name = 'classification-test'
     
 def upload_keywords_map(bucket_name, local_file, table_name):
