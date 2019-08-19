@@ -18,7 +18,7 @@ from Product_Insights.Sentiment.utils \
 from Product_Insights.Twitter.create_twitter_tables \
         import create_twitter_sentiment
 
-local_keywords_file = './Product_Insights/Classification/keywords_map.tsv'
+#local_keywords_file = './Product_Insights/Classification/keywords_map.tsv'
 
 bq_client = bigquery.Client()
 storage_client = storage.Client()
@@ -159,14 +159,16 @@ def determine_topics(df, keywords_map):
   return(df)
 
 
-def update_bq_table(uri, fn, table_ref):
+def update_bq_table(uri, fn, table_ref, table_schema):
   '''Saves data from a bq bucket to a table'''
 
-  
   job_config = bigquery.LoadJobConfig()
   job_config.write_disposition = "WRITE_APPEND"
   job_config.source_format = bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
-  job_config.autodetect = True
+  
+  #job_config.autodetect = True
+  job_config.autodetect = False
+  job_config.schema = table_schema
   
   orig_rows =  bq_client.get_table(table_ref).num_rows
 
@@ -198,8 +200,20 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
   blob = bucket.blob("twitter/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table(uri, fn, table_ref) 
+  s = [
+       bigquery.SchemaField("user_id", "INTEGER"),
+       bigquery.SchemaField("topics", "RECORD", mode="REPEATED", fields=[bigquery.SchemaField("topic", "STRING", mode="NULLABLE"),], ),
+       bigquery.SchemaField("score", "FLOAT"),
+       bigquery.SchemaField("magnitude", "FLOAT"),
+       bigquery.SchemaField("created_at", "TIMESTAMP"),
+       bigquery.SchemaField("discrete_sentiment", "STRING"),
+       bigquery.SchemaField("in_reply_to_status_id_str", "FLOAT"),
+       bigquery.SchemaField("full_text", "STRING"),
+       bigquery.SchemaField("id_str", "INTEGER"),
+      ]
+  update_bq_table(uri, fn, table_ref, s) 
   move_blob_to_processed(bucket,fn)
+
 
 def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE):
   start_dt, end_dt = get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE)
@@ -209,7 +223,7 @@ def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABL
 def get_sentiment(df):
   df = language_analysis(df)
   df = filter_language(df)
-  if not df.empty:
+  if df is not None:
     df = run_sentiment_analysis(df)
   return(df)
 
@@ -222,6 +236,6 @@ def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPU
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if not df.empty:
     df = get_sentiment(df)
-    if not df.empty:
-      df = get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file)
-      save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
+  if df is not None:
+    df = get_topics(OUTPUT_DATASET, OUTPUT_BUCKET, df, local_keywords_file)
+    save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
