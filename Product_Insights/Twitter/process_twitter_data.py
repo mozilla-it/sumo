@@ -87,8 +87,7 @@ def filter_language(df, lang='en', lang_confidence=0.8):
   df = df.drop(['language', 'confidence'], axis=1)
   if df.empty:
     print('No data in dataframe after language filter')
-  else:
-    return(df)
+  return(df)
 
 def run_sentiment_analysis(df):
   '''Estimates the sentiment of each tweet'''
