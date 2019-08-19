@@ -5,7 +5,8 @@ import pandas as pd
 
 from google.cloud import bigquery
 from google.cloud import storage
-from google.cloud.exceptions import NotFound
+from google.cloud import translate
+from google.cloud.exceptions import NotFound, Forbidden
 from pytrends.request import TrendReq
 
 from Product_Insights.GTrends.create_gtrends_tables \
@@ -13,6 +14,7 @@ from Product_Insights.GTrends.create_gtrends_tables \
 
 bq_client = bigquery.Client()
 storage_client = storage.Client()
+translate_client = translate.Client()
 
 def check_last_update(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS):
   qry_max_date = ("SELECT max(update_date) max_date FROM {0}.{1}")\
@@ -81,11 +83,22 @@ def get_data(start_dt, end_dt):
         time.sleep(60)
     return(data)
 
+def translate_queries(q):
+    while True:
+      try:
+        translation_results = translate_client.translate(q.original_query.to_list())
+      except Forbidden:
+        time.sleep(100)
+        continue
+      break
+    q['translated_query'] = pd.DataFrame(translation_results).translatedText
+    return(q)
+
 def clean_queries(q, region, end_dt):
-    q = q.rename({'value':'search_increase_pct'}, axis=1)
+    q = q.rename({'value':'search_increase_pct', 'query': 'original_query'}, axis=1)
     q['region'] = region
     q['update_date'] = end_dt
-    q['query_key_ts'] = end_dt + '#' + region +   '#' + q['query']
+    q['query_key_ts'] = end_dt + '#' + region +   '#' + q['original_query']
     return(q)    
 
 def clean_related_queries(related_query, query, region, end_dt):
@@ -93,7 +106,7 @@ def clean_related_queries(related_query, query, region, end_dt):
     related_query.rename({'date':'timestamp', query:'relative_search_volume'},
                           axis=1, inplace=True)
     related_query.drop('isPartial', axis=1, inplace=True) 
-    related_query['query'] = query
+    related_query['original_query'] = query
     related_query['query_key'] = end_dt + '#' + region +   '#' + query
     return(related_query)
 
@@ -105,14 +118,15 @@ def process_data(data, end_dt):
         q, related_qs = data[region]
         if not q is None:
           q = clean_queries(q, region, end_dt)
+          q = translate_queries(q)
           df_queries = df_queries.append(q)
-
+          
           for query in related_qs.keys():
               related_query = related_qs[query]
               related_query = clean_related_queries(related_query, query, region, end_dt)
               df_queries_ts = df_queries_ts.append(related_query)
     try:
-      df_queries_ts = df_queries_ts[['query', 'query_key', 'relative_search_volume', 'timestamp']]
+      df_queries_ts = df_queries_ts[['original_query', 'query_key', 'relative_search_volume', 'timestamp']]
     except KeyError:
       df_queries_ts = None
     return(df_queries, df_queries_ts)
@@ -145,8 +159,6 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
 
   fn = OUTPUT_TABLE +'_' + start_dt + "_to_" + end_dt + '.json'
   
-  df = df.set_index('query')
-
   df.to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
   
   blob = bucket.blob("gtrends/" + fn)
@@ -168,3 +180,5 @@ def collect_data(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS, OUTPUT_B
         save_results(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_BUCKET, df_queries, start_dt, end_dt) 
         if not df_queries_ts.empty:
           save_results(OUTPUT_DATASET, OUTPUT_TABLE_TS, OUTPUT_BUCKET, df_queries_ts, start_dt, end_dt) 
+
+
