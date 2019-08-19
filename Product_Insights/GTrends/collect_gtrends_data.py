@@ -6,7 +6,7 @@ import pandas as pd
 from google.cloud import bigquery
 from google.cloud import storage
 from google.cloud import translate
-from google.cloud.exceptions import NotFound
+from google.cloud.exceptions import NotFound, Forbidden
 from pytrends.request import TrendReq
 
 from Product_Insights.GTrends.create_gtrends_tables \
@@ -84,7 +84,13 @@ def get_data(start_dt, end_dt):
     return(data)
 
 def translate_queries(q):
-    translation_results = translate_client.translate(q.original_query.to_list())
+    while True:
+      try:
+        translation_results = translate_client.translate(q.original_query.to_list())
+      except Forbidden:
+        time.sleep(100)
+        continue
+      break
     q['translated_query'] = pd.DataFrame(translation_results).translatedText
     return(q)
 
