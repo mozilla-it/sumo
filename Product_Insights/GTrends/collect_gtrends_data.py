@@ -84,15 +84,21 @@ def get_data(start_dt, end_dt):
     return(data)
 
 def translate_queries(q):
+  translated_queries = []
+  for i, row in q.iterrows():
     while True:
       try:
-        translation_results = translate_client.translate(q.original_query.to_list())
-      except Forbidden:
+        print(i, q.shape[0])
+        translation_results = translate_client.translate(row.original_query)
+        translated_queries.append(translation_results['translatedText'])
+      except Exception as e:
+        print(e)
+        print('waiting')
         time.sleep(100)
         continue
       break
-    q['translated_query'] = pd.DataFrame(translation_results).translatedText
-    return(q)
+  q['translated_query'] = translated_queries
+  return(q)
 
 def clean_queries(q, region, end_dt):
     q = q.rename({'value':'search_increase_pct', 'query': 'original_query'}, axis=1)
@@ -177,7 +183,6 @@ def collect_data(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS, OUTPUT_B
     if start_dt: 
         data = get_data(start_dt, end_dt)
         df_queries, df_queries_ts = process_data(data, end_dt)
-        save_results(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_BUCKET, df_queries, start_dt, end_dt) 
         if not df_queries_ts.empty:
           save_results(OUTPUT_DATASET, OUTPUT_TABLE_TS, OUTPUT_BUCKET, df_queries_ts, start_dt, end_dt) 
 
