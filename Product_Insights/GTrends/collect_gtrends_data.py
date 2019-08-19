@@ -88,12 +88,9 @@ def translate_queries(q):
   for i, row in q.iterrows():
     while True:
       try:
-        print(i, q.shape[0])
         translation_results = translate_client.translate(row.original_query)
         translated_queries.append(translation_results['translatedText'])
-      except Exception as e:
-        print(e)
-        print('waiting')
+      except Forbidden:
         time.sleep(100)
         continue
       break
