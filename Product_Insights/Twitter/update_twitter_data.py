@@ -15,6 +15,7 @@ def main():
 
   parser.add_argument('--bucket', nargs='?', const='.', type=str, help='which gs bucket to save data to')
   parser.add_argument('--keywordsmap', nargs='?', const='.', type=str, 
+                      default='./Product_Insights/Classification/keywords_map.tsv',
                       help='location of csv containing keywords for classification. Only needed initially')
 
   args = parser.parse_args()
