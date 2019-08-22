@@ -584,6 +584,6 @@ if __name__ == '__main__':
   #hmmm no dedupe process
   # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
   start_date = date(2019, 3, 1) # inclusive
-  end_date = datetime.today().date() # exclusive
+  end_date = datetime.today().date() - timedelta(days=2) # exclusive
   
   main(start_date, end_date)
