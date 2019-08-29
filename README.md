@@ -15,7 +15,8 @@ Make sure Analytics Reporting API is enabled in the GCP running the code.
 A valid service account should be permissioned to pull data from the SUMO report from the Google Analytics side.
 GoogleAnalytics/create_ga_tables.py creates Google Analytics BiqQuery tables with schema definition.
 GoogleAnalytics/get_ga_data.py pulls data for a given range. The data is written to local csv files in /tmp folder, and pushed to google storage gs://<sumo-bucket>/googleanalytics/. The google storage files are uploaded to BigQuery dataset sumo table ga_*. After upload, the files are moved to the /processed subfolder.  Some of the data pulls hit daily data limits so it is recommend to run data pulls in one month chunks. 
-
+The Google Analytics API has a processing latency of 24-48 hours, https://support.google.com/analytics/answer/1070983?hl=en
+To prevent volatile numbers in the last 48 hours, the daily Google Analytics job retrieves data with a 48 hour lag.
 
 ## Installing / Getting started
 
