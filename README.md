@@ -18,6 +18,10 @@ GoogleAnalytics/get_ga_data.py pulls data for a given range. The data is written
 The Google Analytics API has a processing latency of 24-48 hours, https://support.google.com/analytics/answer/1070983?hl=en
 To prevent volatile numbers in the last 48 hours, the daily Google Analytics job retrieves data with a 48 hour lag.
 
+### Product Insights
+Sentiment analysis on Twitter tweets and Kitsune questions.
+Pull data from GTrends for SUMO. The package uses an unofficial library, PyTrends, to pull data from GTrends. 
+
 ## Installing / Getting started
 
 The scripts are intended to be run on a Google Cloud Project with necessary account permissions. 
