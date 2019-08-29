@@ -1,5 +1,6 @@
 import datetime
 import time
+import re
 
 import pandas as pd
 
@@ -163,9 +164,14 @@ def get_sentiment(df):
   df = run_sentiment_analysis(df)
   return(df)
 
+def strip_html_tags(df):
+  df.question_content = df.question_content.apply(lambda x: re.sub('<[^<]+?>', '', x))
+  return(df)
+
 def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET):
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if not df.empty:
     df = get_sentiment(df)
+    df = strip_html_tags(df)
     save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
 
