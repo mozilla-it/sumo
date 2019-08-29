@@ -1,5 +1,6 @@
 import datetime
 import time
+import re
 
 import pandas as pd
 
@@ -140,7 +141,6 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
 
   fn = 'kitsune_sentiment_' + start_dt[0:10] + "_to_" + end_dt[0:10] + '.json'
   
-  df = df.set_index('question_id')
 
   df.apply(lambda x: x.dropna(), axis=1).to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
   
@@ -164,9 +164,14 @@ def get_sentiment(df):
   df = run_sentiment_analysis(df)
   return(df)
 
+def strip_html_tags(df):
+  df.question_content = df.question_content.apply(lambda x: re.sub('<[^<]+?>', '', x))
+  return(df)
+
 def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET):
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if not df.empty:
     df = get_sentiment(df)
+    df = strip_html_tags(df)
     save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
 

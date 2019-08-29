@@ -194,7 +194,6 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
   fn = 'twitter_sentiment_' + start_dt[0:10] + "_to_" + end_dt[0:10] + '.json'
   uri = "gs://{}/twitter/".format(bucket.name)
 
-  df = df.set_index('id_str')
   df.apply(lambda x: x.dropna(), axis=1).to_json('/tmp/'+fn,  orient="records", lines=True,date_format='iso')
 
   blob = bucket.blob("twitter/" + fn)
