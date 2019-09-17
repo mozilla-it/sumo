@@ -1,16 +1,17 @@
 # Firefox Desktop Support Dashboard 
 
-This folder contains scripts and other files necessary to collect and process the data presented in the Firefox Desktop Support Dashboard. This README provides and in-depth description of what and how data is collected, and how the data is processed and enhanced before it is stored in the dashboard ready tables.  
+This folder contains scripts and other files necessary to collect and process the data presented in the Firefox Desktop Support Dashboard. This README provides an in-depth description of the data collected, how this is done and how the data is processed and enhanced before it is stored in the dashboard ready Google Big Query tables.  
 
-The dashboard draws on data from a variety of data sources: CSAT, Google Trends, Twitter, Kitsune and Google Analytics. Each of these requires slightly different data processing and this is described in detail below. Common for all data sources is that the end results are saved in a series of Google Big Query tables which the dashboard draws on.     
+The dashboard draws on data from a variety of data sources: CSAT (SurveyGizmo), Google Trends, Twitter, Mozilla Support (Kitsune) and Google Analytics. Each of these requires slightly different data processing and this is described in detail below. Common for all data sources is that the end results are saved in a series of Google Big Query tables which the final dashboard draws on.     
 
 ## Data source overview
 
 In this section we give an overview what data is collected and how it is processed. For each data source we also describe what types of insights it provides.  
 
+![All sources](data_sources.png)
+
+
 ### Google Trends 
-
-
 
 From Google Trends we collect all related queries for the term 'Firefox'. This is done weekly and for the following regions in the world ['', 'US', 'DE', 'IN', 'FR', 'RU', 'IT', 'BR', 'PL', 'CN', 'NL', 'JP', 'ES', 'ID']. 
 The data is collected once a week and the related queries are accompanied by a search increase score. This score is a percentage increase in search volume in this week compared to the previous week. Thus the 'Firefox monitor alert' at 8800 % means that there is an 8800 % increase in search volume of this term compared to the previous week. As such the number presented are relative and the google trends pseudo api has no way to determine absolute search volume and comparisons across different versions. 
