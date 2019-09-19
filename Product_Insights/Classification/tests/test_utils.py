@@ -102,8 +102,8 @@ class KeywordsBasedClassifierTestCase(unittest.TestCase):
                         {'topic': 'multiple single words', 'keywords': 'def'},
                         {'topic': 'single phrase', 'keywords': 'abc def'},
                         {'topic': 'word combinations', 'keywords': 'abc, def'},
-                        {'topic': 'word ending', 'keywords': '_abc'},
-                        {'topic': 'word begining', 'keywords': 'abc_'},
+                        {'topic': 'word ending', 'keywords': 'abc_'},
+                        {'topic': 'word begining', 'keywords': '_abc'},
                         ])
 
     def test_empty_text_input(self):
@@ -127,8 +127,36 @@ class KeywordsBasedClassifierTestCase(unittest.TestCase):
     def test_multiple_matches(self):
         text = 'Test sentence abc'
         result = keywords_based_classifier(text, self.keywords_map)
-        self.assertIn('multiple single words', expected_result)
-        self.assertIn('single word', expected_result)
+        self.assertIn('multiple single words', result)
+        self.assertIn('single word', result)
         
+    def test_single_phrase(self):
+        text = 'Test sentence abc def'
+        result = keywords_based_classifier(text, self.keywords_map)
+        self.assertIn('single phrase', result)
+        
+
+    def test_word_combinations(self):
+        text = 'Test sentence def abc'
+        result = keywords_based_classifier(text, self.keywords_map)
+        self.assertIn('word combinations', result)
+        
+    def test_word_combinations_and_phrase(self):
+        text = 'Test sentence abc def'
+        result = keywords_based_classifier(text, self.keywords_map)
+        self.assertIn('word combinations', result)
+        self.assertIn('single phrase', result)        
+
+    def test_beginings(self):
+        text = 'Test sentence abcword'
+        result = keywords_based_classifier(text, self.keywords_map)
+        self.assertIn('word begining', result)
+        
+    def test_word_endings(self): 
+        text = 'Test sentence wordabc'
+        result = keywords_based_classifier(text, self.keywords_map)
+        self.assertIn('word ending', result)
+
+
 if __name__ == '__main__':
     unittest.main()
