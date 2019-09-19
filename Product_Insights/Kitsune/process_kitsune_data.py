@@ -85,6 +85,10 @@ def language_analysis(df):
   return(df)
 
 def filter_language(df, lang='en', lang_confidence=0.8):
+  """ Filters non-english content
+  
+  Note that if there is no data left, the function implicitly returns None"""
+
   df = df[(df.language == lang)&(df.confidence > lang_confidence)]
   df = df.drop(['language', 'confidence'], axis=1)
   if df.empty:
