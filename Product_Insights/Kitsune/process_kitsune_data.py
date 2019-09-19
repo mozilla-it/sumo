@@ -59,6 +59,12 @@ def load_data(INPUT_DATASET, INPUT_TABLE,start_dt, end_dt, limit=None):
       return(None)
 
 def language_analysis(df):
+  """ Adds language and confidence to df using the Google Could Language API
+
+  Note that the function can sometimes run into rate-limit restrictions, which is why
+  the calls are wrapped in a while loop, to ensure that the API is called for all rows.
+  """
+
   d_lang = {}
   d_confidence = {}
   for i, row in df.iterrows():
@@ -165,7 +171,8 @@ def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABL
 def get_sentiment(df):
   df = language_analysis(df)
   df = filter_language(df)
-  df = run_sentiment_analysis(df)
+  if df: 
+    df = run_sentiment_analysis(df)
   return(df)
 
 def strip_html_tags(df):
@@ -176,6 +183,7 @@ def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPU
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if not df.empty:
     df = get_sentiment(df)
-    df = strip_html_tags(df)
-    save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
+    if df: 
+      df = strip_html_tags(df)
+      save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
 
