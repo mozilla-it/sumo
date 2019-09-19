@@ -24,7 +24,11 @@ bq_client = bigquery.Client()
 storage_client = storage.Client()
 
 def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
-  ''' Return the current time and last time data was previously saved with this scipt '''
+  ''' Return the current time and last time data was previously saved with this script. 
+
+  If the output table doesn't exists, then a new table is created with the same name
+  and the returned start date is set as  2010-05-01. 
+  '''
   start_dt = datetime.datetime(2010, 5, 1).isoformat()
   end_dt = datetime.datetime.now().isoformat()
   
