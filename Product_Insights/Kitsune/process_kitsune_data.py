@@ -98,6 +98,12 @@ def filter_language(df, lang='en', lang_confidence=0.8):
 
 
 def run_sentiment_analysis(df):
+  """ Adds score, magnitude and discrete_sentiment to df using the Google Could Sentiment API
+
+  Note that the function can sometimes run into rate-limit restrictions, which is why
+  the calls are wrapped in a while loop, to ensure that the API is called for all rows.
+  """
+
   sentiment_score = {}
   sentiment_magnitude = {}
   for i, row in df.iterrows():
