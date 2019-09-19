@@ -103,7 +103,7 @@ def run_sentiment_analysis(df):
   for i, row in df.iterrows():
     while True:
       try:
-        text = row.title + row.question_content
+        text = row.title + " " + row.question_content
         score, magnitude = gc_sentiment(text, type='HTML')
         sentiment_score[row.question_id] = score
         sentiment_magnitude[row.question_id] = magnitude
