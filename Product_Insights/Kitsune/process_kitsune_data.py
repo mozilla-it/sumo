@@ -64,7 +64,7 @@ def language_analysis(df):
   for i, row in df.iterrows():
     while True:
       try:
-        confidence, language = gc_detect_language(row.title + row.question_content)
+        confidence, language = gc_detect_language(row.title + ' ' + row.question_content)
         d_lang[row.question_id] = language
         d_confidence[row.question_id] = confidence
       except (Forbidden, TooManyRequests) as e:
