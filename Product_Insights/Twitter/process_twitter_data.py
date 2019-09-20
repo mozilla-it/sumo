@@ -129,7 +129,7 @@ def get_keywords_map(OUTPUT_DATASET, OUTPUT_BUCKET, local_keywords_file):
     keywords_map = query_job.to_dataframe() 
   except NotFound:
     create_keywords_map(OUTPUT_DATASET, table_name)
-    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, table_name)
+    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, OUTPUT_DATASET, table_name)
     query_job = bq_client.query(query)
     keywords_map = query_job.to_dataframe()
 
