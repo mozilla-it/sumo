@@ -6,19 +6,19 @@ import pandas as pd
 from google.cloud import bigquery, storage
 from Product_Insights.Kitsune.process_kitsune_data import get_timeperiod, load_data, language_analysis, filter_language, run_sentiment_analysis, save_results
 from Product_Insights.Kitsune.create_kitsune_tables import create_kitsune_sentiment
-from google.cloud.exceptions import NotFound
+from google.cloud.exceptions import NotFound, Conflict
 
 class GetTimeperiodTestCase(unittest.TestCase):
     """Tests for get_timeperiod from Kitsune/process_kitsune_data.py"""
 
     def setUp(self):
-        self.OUTPUT_DATASET = 'analyse_and_tal'
+        self.OUTPUT_DATASET = 'test_dataset_for_test_process_kitsune_data'
         self.OUTPUT_TABLE = 'test_table_for_test_process_kitsune_data'
         
         self.bq_client = bigquery.Client()
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, self.OUTPUT_TABLE))
-        except NotFound:
+            self.bq_client.create_dataset(self.OUTPUT_DATASET)
+        except Conflict:
             pass
 
     def test_wrong_output_dataset(self):
@@ -81,12 +81,23 @@ class GetTimeperiodTestCase(unittest.TestCase):
         self.assertEqual(end_dt, end_dt_expected)
         self.assertEqual(start_dt, start_dt_expected)
 
+    def tearDown(self):
+        # delete dataset
+        try:
+            tables = self.bq_client.list_tables(self.OUTPUT_DATASET)
+            for table in tables:
+                self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, table.table_id))
+            self.bq_client.delete_dataset(self.OUTPUT_DATASET)
+        except NotFound:
+            pass
+
+
 class LoadDataTestCase(unittest.TestCase):
     """Tests for load_data from Kitsune/process_kitsune_data.py"""
 
     def setUp(self):
-        self.INPUT_DATASET = 'sumo_views'
-        self.INPUT_TABLE = 'kitsune_questions_view'
+        self.INPUT_DATASET = 'test_dataset_for_test_process_kitsune_data'
+        self.INPUT_TABLE = 'test_table_for_test_process_kitsune_data'
         self.start_dt = "2010-05-01T00:00:00"
         self.end_dt = "2019-10-01T00:00:00"
 
@@ -178,8 +189,8 @@ class SaveResultsTestCase(unittest.TestCase):
 
 
     def setUp(self):
-        self.OUTPUT_BUCKET = 'bucket_for_test_process_kitsune_data'
-        self.OUTPUT_DATASET = 'analyse_and_tal'
+        self.OUTPUT_BUCKET = 'test_bucket_for_test_process_kitsune_data'
+        self.OUTPUT_DATASET = 'test_dataset_for_test_process_kitsune_data'
         self.OUTPUT_TABLE = 'test_table_for_test_process_kitsune_data'
         self.start_dt = "2010-05-01T00:00:00"
         self.end_dt = "2019-10-01T00:00:00"
@@ -209,22 +220,13 @@ class SaveResultsTestCase(unittest.TestCase):
         self.bq_client = bigquery.Client()
         self.storage_client = storage.Client()
         
-        #Make sure we have an empty test table we can write to
+        #Make sure we have a test dataset we can write to
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, self.OUTPUT_TABLE))
-        except NotFound:
+            self.bq_client.create_dataset(self.OUTPUT_DATASET)
+        except Conflict:
             pass
         create_kitsune_sentiment(self.OUTPUT_DATASET, self.OUTPUT_TABLE)
 
-        #Make sure we have an empty test bucket we can write to
-        try:
-            blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
-            for blob in blobs:
-                blob.delete()
-            self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
-
-        except NotFound:
-            pass
         self.storage_client.create_bucket(self.OUTPUT_BUCKET)
         self.bucket = self.storage_client.bucket(self.OUTPUT_BUCKET)
 
@@ -261,6 +263,26 @@ class SaveResultsTestCase(unittest.TestCase):
         orig_rows =  self.bq_client.get_table(table_ref).num_rows
         print(orig_rows)
         self.assertIs(orig_rows, 2)
+
+    def tearDown(self):
+
+        try:
+            tables = self.bq_client.list_tables(self.OUTPUT_DATASET)
+            for table in tables:
+                self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, table.table_id))
+            self.bq_client.delete_dataset(self.OUTPUT_DATASET)
+        except NotFound:
+            pass
+
+        #Make sure we have an empty test bucket we can write to
+        try:
+            blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
+            for blob in blobs:
+                blob.delete()
+            self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
+        except NotFound:
+            pass
+
 
 if __name__ == '__main__':
     unittest.main()
