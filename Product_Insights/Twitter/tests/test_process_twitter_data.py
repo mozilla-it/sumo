@@ -21,9 +21,10 @@ class GetTimeperiodTestCase(unittest.TestCase):
         self.OUTPUT_TABLE = 'test_table_for_test_process_twitter_data'
         
         self.bq_client = bigquery.Client()
+
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, self.OUTPUT_TABLE))
-        except NotFound:
+            self.bq_client.create_dataset(self.OUTPUT_DATASET)
+        except Conflict:
             pass
 
     def test_wrong_output_dataset(self):
@@ -79,7 +80,10 @@ class GetTimeperiodTestCase(unittest.TestCase):
     def tearDown(self):
         # delete dataset
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+            tables = self.bq_client.list_tables(self.OUTPUT_DATASET)
+            for table in tables:
+                self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, table.table_id))
+            self.bq_client.delete_dataset(self.OUTPUT_DATASET)
         except NotFound:
             pass
 
@@ -181,22 +185,23 @@ class GetKeywordsMapTestCase(unittest.TestCase):
     def setUp(self):
         self.bq_client = bigquery.Client()
         self.storage_client = storage.Client()
-        try:
-            self.bq_client.create_dataset('test_dataset_for_test_process_twitter_data')
-        except Conflict:
-            pass
         self.OUTPUT_DATASET = 'test_dataset_for_test_process_twitter_data'
         self.OUTPUT_BUCKET = 'bucket_for_test_process_twitter_data'
         self.local_keywords_file = "Product_Insights/Twitter/tests/data/keywords_map.tsv"
+
+        try:
+            self.bq_client.create_dataset(self.OUTPUT_DATASET)
+        except Conflict:
+            pass
 
         try:
             blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
             for blob in blobs:
                 blob.delete()
             self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
-
         except NotFound:
             pass
+
         self.storage_client.create_bucket(self.OUTPUT_BUCKET)
         self.bucket = self.storage_client.bucket(self.OUTPUT_BUCKET)
 
@@ -235,7 +240,10 @@ class GetKeywordsMapTestCase(unittest.TestCase):
     def tearDown(self):    
         # delete dataset
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+            tables = self.bq_client.list_tables(self.OUTPUT_DATASET)
+            for table in tables:
+                self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, table.table_id))
+            self.bq_client.delete_dataset(self.OUTPUT_DATASET)
         except NotFound:
             pass
 
@@ -253,7 +261,6 @@ class GetKeywordsMapTestCase(unittest.TestCase):
 class DetermineTopicsTestCase(unittest.TestCase):
     """Tests for determine_topics from Twitter/process_twitter_data.py"""
     def setUp(self):
-
 
         self.df = pd.DataFrame([{'id_str': "1",
                                    'created_at': datetime.datetime.now(), 
@@ -276,13 +283,15 @@ class DetermineTopicsTestCase(unittest.TestCase):
 
         self.bq_client = bigquery.Client()
         self.storage_client = storage.Client()
-        try:
-            self.bq_client.create_dataset('test_dataset_for_test_process_twitter_data')
-        except Conflict:
-            pass
         self.OUTPUT_DATASET = 'test_dataset_for_test_process_twitter_data'
         self.OUTPUT_BUCKET = 'bucket_for_test_process_twitter_data'
         self.local_keywords_file = "Product_Insights/Twitter/tests/data/keywords_map.tsv"
+
+
+        try:
+            self.bq_client.create_dataset(self.OUTPUT_DATASET)
+        except Conflict:
+            pass
 
         try:
             blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
@@ -292,11 +301,10 @@ class DetermineTopicsTestCase(unittest.TestCase):
 
         except NotFound:
             pass
+
         self.storage_client.create_bucket(self.OUTPUT_BUCKET)
         self.bucket = self.storage_client.bucket(self.OUTPUT_BUCKET)
-
         self.keywords_map = get_keywords_map(self.OUTPUT_DATASET, self.OUTPUT_BUCKET, self.local_keywords_file)
-
 
     def test_df_columns(self):
         df_results = determine_topics(self.df, self.keywords_map)
@@ -316,7 +324,10 @@ class DetermineTopicsTestCase(unittest.TestCase):
     def tearDown(self):    
         # delete dataset
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+            tables = self.bq_client.list_tables(self.OUTPUT_DATASET)
+            for table in tables:
+                self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, table.table_id))
+            self.bq_client.delete_dataset(self.OUTPUT_DATASET)
         except NotFound:
             pass
 
@@ -329,7 +340,7 @@ class DetermineTopicsTestCase(unittest.TestCase):
 
         except NotFound:
             pass
-            
+
 class SaveResultsTestCase(unittest.TestCase):
     """Tests for save_results from Twitter/process_twitter_data.py"""
 
@@ -355,11 +366,12 @@ class SaveResultsTestCase(unittest.TestCase):
         self.bq_client = bigquery.Client()
         self.storage_client = storage.Client()
         
-        #Make sure we have an empty test table we can write to
+        #Make sure we have a test dataset we can write to
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, self.OUTPUT_TABLE))
-        except NotFound:
+            self.bq_client.create_dataset(self.OUTPUT_DATASET)
+        except Conflict:
             pass
+
         create_twitter_sentiment(self.OUTPUT_DATASET, self.OUTPUT_TABLE)
 
         #Make sure we have an empty test bucket we can write to
@@ -368,9 +380,9 @@ class SaveResultsTestCase(unittest.TestCase):
             for blob in blobs:
                 blob.delete()
             self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
-
         except NotFound:
             pass
+
         self.storage_client.create_bucket(self.OUTPUT_BUCKET)
         self.bucket = self.storage_client.bucket(self.OUTPUT_BUCKET)
 
@@ -409,10 +421,12 @@ class SaveResultsTestCase(unittest.TestCase):
     def tearDown(self):
 
         try:
-            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, self.OUTPUT_TABLE))
+            tables = self.bq_client.list_tables(self.OUTPUT_DATASET)
+            for table in tables:
+                self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, table.table_id))
+            self.bq_client.delete_dataset(self.OUTPUT_DATASET)
         except NotFound:
             pass
-        create_twitter_sentiment(self.OUTPUT_DATASET, self.OUTPUT_TABLE)
 
         #Make sure we have an empty test bucket we can write to
         try:
@@ -420,7 +434,6 @@ class SaveResultsTestCase(unittest.TestCase):
             for blob in blobs:
                 blob.delete()
             self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
-
         except NotFound:
             pass
 
