@@ -2,18 +2,22 @@ import unittest
 import datetime
 
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
 from google.cloud import bigquery, storage
-from Product_Insights.Twitter.process_twitter_data import get_timeperiod, load_data, language_analysis, filter_language, run_sentiment_analysis, save_results
+from Product_Insights.Twitter.process_twitter_data import get_timeperiod, load_data, language_analysis, filter_language, run_sentiment_analysis, save_results, get_keywords_map, determine_topics
 from Product_Insights.Twitter.create_twitter_tables import create_twitter_sentiment
-from google.cloud.exceptions import NotFound
-
+from google.cloud.exceptions import NotFound, Conflict
+from Product_Insights.Classification.create_classification_table \
+        import create_keywords_map
+from Product_Insights.Classification.upload_keywords_map \
+        import upload_keywords_map
 
 class GetTimeperiodTestCase(unittest.TestCase):
     """Tests for get_timeperiod from Twitter/process_twitter_data.py"""
 
     def setUp(self):
-        self.OUTPUT_DATASET = 'analyse_and_tal'
+        self.OUTPUT_DATASET = 'test_dataset_for_test_process_twitter_data'
         self.OUTPUT_TABLE = 'test_table_for_test_process_twitter_data'
         
         self.bq_client = bigquery.Client()
@@ -72,14 +76,23 @@ class GetTimeperiodTestCase(unittest.TestCase):
         self.assertEqual(end_dt, end_dt_expected)
         self.assertEqual(start_dt, start_dt_expected)
 
+    def tearDown(self):
+        # delete dataset
+        try:
+            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+        except NotFound:
+            pass
+
+
 class LoadDataTestCase(unittest.TestCase):
     """Tests for load_data from Twitter/process_twitter_data.py"""
 
     def setUp(self):
-        self.INPUT_DATASET = 'sumo_views'
-        self.INPUT_TABLE = 'twitter_mentions_view'
+        self.INPUT_DATASET = 'test_dataset_for_test_process_twitter_data'
+        self.INPUT_TABLE = 'test_table_for_test_process_twitter_data'
         self.start_dt = "2010-05-01T00:00:00"
         self.end_dt = "2019-10-01T00:00:00"
+
 
     def test_wrong_input_dataset(self):
         self.INPUT_DATASET = 'somenonsensedataset'
@@ -162,15 +175,168 @@ class RunSentimentAnalysisTestCase(unittest.TestCase):
         self.assertEqual('negativ', results.discrete_sentiment.iloc[2])
 
 
-# SKRIV TESTS HER OM TOPIC CLASSIFICATION!!!!!
+class GetKeywordsMapTestCase(unittest.TestCase):
+    """Tests for get_keywords_map from Twitter/process_twitter_data.py"""
 
+    def setUp(self):
+        self.bq_client = bigquery.Client()
+        self.storage_client = storage.Client()
+        try:
+            self.bq_client.create_dataset('test_dataset_for_test_process_twitter_data')
+        except Conflict:
+            pass
+        self.OUTPUT_DATASET = 'test_dataset_for_test_process_twitter_data'
+        self.OUTPUT_BUCKET = 'bucket_for_test_process_twitter_data'
+        self.local_keywords_file = "Product_Insights/Twitter/tests/data/keywords_map.tsv"
+
+        try:
+            blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
+            for blob in blobs:
+                blob.delete()
+            self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
+
+        except NotFound:
+            pass
+        self.storage_client.create_bucket(self.OUTPUT_BUCKET)
+        self.bucket = self.storage_client.bucket(self.OUTPUT_BUCKET)
+
+
+    def test_correct_output_if_table_not_found(self): 
+        try:
+            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+        except NotFound:
+            pass
+
+        keywords_map = get_keywords_map(self.OUTPUT_DATASET, self.OUTPUT_BUCKET, self.local_keywords_file)
+
+        keywords_map_expected = pd.read_csv(self.local_keywords_file, sep='\t')
+
+        assert_frame_equal(keywords_map, keywords_map_expected, check_dtype=False)
+    
+    def test_correct_output_if_table_is_found(self): 
+        try:
+            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+        except NotFound:
+            pass
+
+        create_keywords_map(self.OUTPUT_DATASET, 'keywords_map')
+        upload_keywords_map(self.OUTPUT_BUCKET, self.local_keywords_file, self.OUTPUT_DATASET, 'keywords_map')
+
+
+
+        keywords_map = get_keywords_map(self.OUTPUT_DATASET, self.OUTPUT_BUCKET, self.local_keywords_file)
+
+        keywords_map_expected = pd.read_csv(self.local_keywords_file, sep='\t')
+
+        assert_frame_equal(keywords_map, keywords_map_expected, check_dtype=False)
+
+
+
+    def tearDown(self):    
+        # delete dataset
+        try:
+            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+        except NotFound:
+            pass
+
+        # delete bucket
+        try:
+            blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
+            for blob in blobs:
+                blob.delete()
+            self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
+
+        except NotFound:
+            pass
+
+
+class DetermineTopicsTestCase(unittest.TestCase):
+    """Tests for determine_topics from Twitter/process_twitter_data.py"""
+    def setUp(self):
+
+
+        self.df = pd.DataFrame([{'id_str': "1",
+                                   'created_at': datetime.datetime.now(), 
+                                   'full_text': 'test keywords 1', 
+                                   'user_id':10, 
+                                   'in_reply_to_status_id_str': "10",     
+                                   'score': 1.0, 
+                                   'magnitude': 1.0, 
+                                   'discrete_sentiment': 'positive'
+                                   },
+                                   {'id_str': "2",
+                                   'created_at': datetime.datetime.now(), 
+                                   'full_text': 'test keywords 2', 
+                                   'user_id':10, 
+                                   'in_reply_to_status_id_str': "10",     
+                                   'score': 1.0, 
+                                   'magnitude': 1.0, 
+                                   'discrete_sentiment': 'positive'
+                                   }])
+
+        self.bq_client = bigquery.Client()
+        self.storage_client = storage.Client()
+        try:
+            self.bq_client.create_dataset('test_dataset_for_test_process_twitter_data')
+        except Conflict:
+            pass
+        self.OUTPUT_DATASET = 'test_dataset_for_test_process_twitter_data'
+        self.OUTPUT_BUCKET = 'bucket_for_test_process_twitter_data'
+        self.local_keywords_file = "Product_Insights/Twitter/tests/data/keywords_map.tsv"
+
+        try:
+            blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
+            for blob in blobs:
+                blob.delete()
+            self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
+
+        except NotFound:
+            pass
+        self.storage_client.create_bucket(self.OUTPUT_BUCKET)
+        self.bucket = self.storage_client.bucket(self.OUTPUT_BUCKET)
+
+        self.keywords_map = get_keywords_map(self.OUTPUT_DATASET, self.OUTPUT_BUCKET, self.local_keywords_file)
+
+
+    def test_df_columns(self):
+        df_results = determine_topics(self.df, self.keywords_map)
+        self.assertIn('topics', df_results.columns)
+
+        self.assertTrue(1, len(df_results.topics.iloc[1]))
+
+    def test_topic_detected(self):
+        df_results = determine_topics(self.df, self.keywords_map)
+        self.assertTrue(2, len(df_results.topics.iloc[0]))
+
+
+    def test_topic_not_detected(self):
+        df_results = determine_topics(self.df, self.keywords_map)
+        self.assertTrue(1, len(df_results.topics.iloc[1]))
+
+    def tearDown(self):    
+        # delete dataset
+        try:
+            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, 'keywords_map'))
+        except NotFound:
+            pass
+
+        # delete bucket
+        try:
+            blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
+            for blob in blobs:
+                blob.delete()
+            self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
+
+        except NotFound:
+            pass
+            
 class SaveResultsTestCase(unittest.TestCase):
     """Tests for save_results from Twitter/process_twitter_data.py"""
 
 
     def setUp(self):
-        self.OUTPUT_BUCKET = 'bucket_for_test_process_twitter_data'
-        self.OUTPUT_DATASET = 'analyse_and_tal'
+        self.OUTPUT_BUCKET = 'test_bucket_for_test_process_twitter_data'
+        self.OUTPUT_DATASET = 'test_dataset_for_test_process_twitter_data'
         self.OUTPUT_TABLE = 'test_table_for_test_process_twitter_data'
         self.start_dt = "2010-05-01T00:00:00"
         self.end_dt = "2019-10-01T00:00:00"
@@ -224,7 +390,6 @@ class SaveResultsTestCase(unittest.TestCase):
         table_ref = dataset_ref.table(self.OUTPUT_TABLE)
 
         orig_rows =  self.bq_client.get_table(table_ref).num_rows
-        print(orig_rows)
         self.assertIs(orig_rows, 1)
 
 
@@ -239,8 +404,26 @@ class SaveResultsTestCase(unittest.TestCase):
         table_ref = dataset_ref.table(self.OUTPUT_TABLE)
 
         orig_rows =  self.bq_client.get_table(table_ref).num_rows
-        print(orig_rows)
         self.assertIs(orig_rows, 2)
+
+    def tearDown(self):
+
+        try:
+            self.bq_client.delete_table('{}.{}'.format(self.OUTPUT_DATASET, self.OUTPUT_TABLE))
+        except NotFound:
+            pass
+        create_twitter_sentiment(self.OUTPUT_DATASET, self.OUTPUT_TABLE)
+
+        #Make sure we have an empty test bucket we can write to
+        try:
+            blobs = self.storage_client.bucket(self.OUTPUT_BUCKET).list_blobs()
+            for blob in blobs:
+                blob.delete()
+            self.storage_client.bucket(self.OUTPUT_BUCKET).delete()
+
+        except NotFound:
+            pass
+
 
 if __name__ == '__main__':
     unittest.main()
