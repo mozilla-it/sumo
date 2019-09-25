@@ -1,73 +1,65 @@
-# Firefox Desktop Support Dashboard 
+# Firefox Desktop Support Dashboard
 
-This folder contains scripts and other files necessary to collect and process the data presented in the Firefox Desktop Support Dashboard. This README provides an in-depth description of the data collected, how this is done and how the data is processed and enhanced before it is stored in the dashboard ready Google Big Query tables.  
+This folder contains all the scripts and other files necessary to collect and process the data presented in the Firefox Desktop Support Dashboard. This README provides an in-depth description of the data collected, how this is done and how the data is processed and enhanced before it is stored in the dashboard ready Google Big Query (gbq) tables.  
 
-The dashboard draws on data from a variety of data sources: CSAT (SurveyGizmo), Google Trends, Twitter, Mozilla Support (Kitsune) and Google Analytics. Each of these requires slightly different data processing and this is described in detail below. Common for all data sources is that the end results are saved in a series of Google Big Query tables which the final dashboard draws on.     
+The dashboard draws on data from a variety of data sources: CSAT (SurveyGizmo), Google Trends, Twitter, Mozilla Support (Kitsune) and Google Analytics. Each of these requires slightly different data processing and this is described in detail below. Common for all data sources is that the end results are saved in a series of gbq tables which the final dashboard draws on.     
 
-## Data source overview
+**Goals for the dashboard:**
+- More effectively deliver Firefox Release and Insights updates for high impact insights to PMs
+- Reduce manual processes for delivering insights: less manual reading of Forum posts and social media posts
 
-In this section we give an overview what data is collected and how it is processed. For each data source we also describe what types of insights it provides.  
+**By specifically answering the following questions:**
+- What is the public sentiment around Firefox from week to week (CSAT, Twitter)
+- What are users searching for when they are looking for Firefox (Google Trends)
+- Which pain points are users experiencing? (Kitsune and Google Analytics)
+
+
+## Data sources and pre-processing
+
+In this section we give an overview over the data which is collected and how it is processed. For each data source we also describe what types of insights it provides.  
 
 ![All sources](data_sources.png)
+<small>Figure: Overview of the five data sources collected in this project: Mozilla Support (Kitsune), Twitter, Google Trends, CSAT (Survey Gizmo) and Google Analytics</small>
 
+### Google Trends: Changes in related search terms
 
-### Google Trends 
+![Google Trends pipeline](pipeline_google_trends.png)
+<small>Figure: Simplified overview of Google Trends data pipeline.</small>
 
-From Google Trends we collect all related queries for the term 'Firefox'. This is done weekly and for the following regions in the world ['', 'US', 'DE', 'IN', 'FR', 'RU', 'IT', 'BR', 'PL', 'CN', 'NL', 'JP', 'ES', 'ID']. 
-The data is collected once a week and the related queries are accompanied by a search increase score. This score is a percentage increase in search volume in this week compared to the previous week. Thus the 'Firefox monitor alert' at 8800 % means that there is an 8800 % increase in search volume of this term compared to the previous week. As such the number presented are relative and the google trends pseudo api has no way to determine absolute search volume and comparisons across different versions. 
+From Google Trends we collect all related queries for the term _Firefox_. This is done weekly and for the following regions: Brazil, China, France, germany, India, Indonesia, Italy, Japan, Netherlands, Poland, Russia, Spain, US and World-Wide. This means the user can drill down on search queries for a specific region in the dashboard, but not by a specific language. 
 
-For tidligt? 
+The related queries are accompanied by a search increase score. This score is a percentage increase in search volume for the collected week compared to the previous week. Thus, if the search term _Firefox monitor alert_ is at 8,800 %, that means there is an 8,800 % increase in search volume for this term compared to the previous week. As such, the number presented are relative and there is no way to determine absolute search volume or comparisons across different versions, regions etc.
 
-### Twitter
+We access Google Trends using an unoffical API called [pytrends](https://github.com/GeneralMills/pytrends).
 
-The other module takes care of getting all twitter mentions that we are interested in. This module takes care of reading these tables, filtering out all non-english tweets, classifying these and running a sentiment analysis on each tweet. This enhanced data is then save in seperate gbq tables for use in the dashboard. 
+### Twitter: Sentiment in relevant tweets
 
-Tweets are filtered out if the google language api returns a less than 80 % chance of the content being non-english. The tweets are then run through a sentiment analysis use the google sentiment api. This returns two scores which are combined in a simple Positive, Negative, Neutral class. 
+![Twitter pipeline](pipeline_twitter.png)
+<small>Figure: Simplified overview of the Twitter data pipeline.</small>
 
-Finally the tweets are classified by topic. This is done using a regex match on the topics found in the file ...
-This is done dynamically so when the file changes in the repo this affects the topics at runtime.  
+For Twitter, we collect tweets where the [@firefox](https://twitter.com/firefox) handle is mentioned. The collection from the Twitter API has already been taken care of, so we only access the data from pre-defined gbq tables. This module takes care of reading these tables, filtering out all non-english tweets (using the Google Cloud Language API for language inference), classifying the topic of them and running a sentiment analysis on each tweet. This enhanced data is then saved in seperate gbq tables for use in the dashboard. 
 
-All this data is saved in dedicated gbq tables for use in the dashboard. 
+Tweets are filtered out using the Google Cloud Natural Language API. If a tweet has a 80 % probability of being written in English, we keep the tweet and run it through the Google Clound Natural Languge API again to estimate the sentiment of the tweet. This returns two scores which are combined in a simple Positive, Negative and Neutral class. You can read more about the two different scores [here](https://cloud.google.com/natural-language/docs/basics#sentiment_analysis). 
 
-### Kitsune api
+Finally the tweets are classified by topic. This is done using a regex match on the topics found in the [keyword_map.tsv](https://github.com/ogtal/sumo/blob/master/Product_Insights/Classification/keywords_map.tsv) file. The topics have been developed by the SUMO team, and consists of various keywords or combination of keywords. Classification is done dynamically, so when the file changes in the repo this affects the topics at runtime.  
 
-From kitsune we get the SUMO questions. 
-Again we filter out non-english questions. Also using the language api. 
-The topics are reused from kitsune. 
+All this data is saved in dedicated gbq tables for use in the dashboard.
 
-Again we use the sentiment api to determine a Positive, Negative or Neutral sentiment. 
+### Mozilla Support (Kitsune API): Sentiment in support questions
 
+Support questions from the support website is already accuired from the Kitsune API and stored in gbq tables, so we access these directly. We filter out non-english questions using Google Cloud Natural Language API. If a question has a 80 % probability of being written in English, we keep the tweet and run it through the Google Clound Natural Languge API again to estimate the sentiment of the tweet. This returns two scores which are combined in a simple Positive, Negative and Neutral class. You can read more about the two different scores [here](https://cloud.google.com/natural-language/docs/basics#sentiment_analysis). 
 
-### Google Analytics
+Each question comes with a pre-defined topic from the SUMO website.
 
-From google analytics we get the page views and exit rates from the support forum for questions and kb articles. 
+### Google Analytics: Changes in pageviews for Knowledge Base articles and support questions
 
-### Firefox Customer Satisfaction Score
+We utilize data fra Google Analytics to measure week on week change in pageviews of Knowledge Base articles and SUMO support forum questions. This data has already been collected, so the dashboard access it directly from pre-defined gbq tables.
 
-From here we get the results of the CSAT. 
+### Customer Satisfaction Score (Survey Gizmo): Weekly satisfaction score
 
-## Data processing 
+Data fra Survey Gizmo has already been collected, so the dashboard accesses the pre-defined gbq tables directly. 
 
-### Google Trends 
-
-### Twitter
-
-This data is collected using the pytrends module. This is an unofficial API ...
-
-### Google Analytics
-
-### Firefox Customer Satisfaction Score
-
-
-Uses Google Analytics Reporting API v4 to pull dimensions and metrics for the Google Analytics SUMO report.
-
-https://developers.google.com/analytics/devguides/reporting/core/v4/rest/
-
-Make sure Analytics Reporting API is enabled in the GCP running the code.
-A valid service account should be permissioned to pull data from the SUMO report from the Google Analytics side.
-GoogleAnalytics/create_ga_tables.py creates Google Analytics BiqQuery tables with schema definition.
-GoogleAnalytics/get_ga_data.py pulls data for a given range. The data is written to local csv files in /tmp folder, and pushed to google storage gs://<sumo-bucket>/googleanalytics/. The google storage files are uploaded to BigQuery dataset sumo table ga_*. After upload, the files are moved to the /processed subfolder.  Some of the data pulls hit daily data limits so it is recommend to run data pulls in one month chunks. 
-
+TODO: Add a short description of the CSAT survey - what does it include and how is it conducted.
 
 
 ## Installing / Getting started
