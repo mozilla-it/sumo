@@ -17,7 +17,11 @@ bq_client = bigquery.Client()
 storage_client = storage.Client()
 
 def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
-  ''' Return the current time and last time data was previously saved with this scipt '''
+  ''' Return the current time and last time data was previously saved with this script. 
+
+  If the output table doesn't exists, then a new table is created with the same name
+  and the returned start date is set as  2010-05-01. 
+  '''
   start_dt = datetime.datetime(2010, 5, 1).isoformat()
   end_dt = datetime.datetime.now().isoformat()
   
@@ -55,12 +59,18 @@ def load_data(INPUT_DATASET, INPUT_TABLE,start_dt, end_dt, limit=None):
       return(None)
 
 def language_analysis(df):
+  """ Adds language and confidence to df using the Google Could Language API
+
+  Note that the function can sometimes run into rate-limit restrictions, which is why
+  the calls are wrapped in a while loop, to ensure that the API is called for all rows.
+  """
+
   d_lang = {}
   d_confidence = {}
   for i, row in df.iterrows():
     while True:
       try:
-        confidence, language = gc_detect_language(row.title + row.question_content)
+        confidence, language = gc_detect_language(row.title + ' ' + row.question_content)
         d_lang[row.question_id] = language
         d_confidence[row.question_id] = confidence
       except (Forbidden, TooManyRequests) as e:
@@ -75,6 +85,10 @@ def language_analysis(df):
   return(df)
 
 def filter_language(df, lang='en', lang_confidence=0.8):
+  """ Filters non-english content
+  
+  Note that if there is no data left, the function implicitly returns None"""
+
   df = df[(df.language == lang)&(df.confidence > lang_confidence)]
   df = df.drop(['language', 'confidence'], axis=1)
   if df.empty:
@@ -84,12 +98,18 @@ def filter_language(df, lang='en', lang_confidence=0.8):
 
 
 def run_sentiment_analysis(df):
+  """ Adds score, magnitude and discrete_sentiment to df using the Google Could Sentiment API
+
+  Note that the function can sometimes run into rate-limit restrictions, which is why
+  the calls are wrapped in a while loop, to ensure that the API is called for all rows.
+  """
+
   sentiment_score = {}
   sentiment_magnitude = {}
   for i, row in df.iterrows():
     while True:
       try:
-        text = row.title + row.question_content
+        text = row.title + " " + row.question_content
         score, magnitude = gc_sentiment(text, type='HTML')
         sentiment_score[row.question_id] = score
         sentiment_magnitude[row.question_id] = magnitude
@@ -161,7 +181,8 @@ def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABL
 def get_sentiment(df):
   df = language_analysis(df)
   df = filter_language(df)
-  df = run_sentiment_analysis(df)
+  if df: 
+    df = run_sentiment_analysis(df)
   return(df)
 
 def strip_html_tags(df):
@@ -172,6 +193,7 @@ def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPU
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if not df.empty:
     df = get_sentiment(df)
-    df = strip_html_tags(df)
-    save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
+    if df: 
+      df = strip_html_tags(df)
+      save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
 
