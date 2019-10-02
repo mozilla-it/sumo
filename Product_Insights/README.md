@@ -62,104 +62,18 @@ Data fra Survey Gizmo has already been collected, so the dashboard accesses the 
 TODO: Add a short description of the CSAT survey - what does it include and how is it conducted.
 
 
-## Installing / Getting started
-
-The scripts are intended to be run on a Google Cloud Project with necessary account permissions. 
-
-Assumes Google storage folder structure:
-```shell
-gs:// <sumo-bucket>  
-    / googleanalytics => where google analytics data files are initially placed
-    / googleanalytics / processed => where processed google analytics data files are placed after being uploaded to BigQuery
-    / googleplaystore => where google  data files are initially placed [deprecated]
-    / googleplaystore / processed => where processed google analytics data files are placed after being uploaded to BigQuery [deprecated]
-    / tmp => model param files, aggregation files in subfolder by model pararm
-gs:// <data-bucket> => location of parquet input data files
-```
-
-```shell
-packagemanager install awesome-project
-awesome-project start
-awesome-project "Do something!"  # prints "Nah."
-```
-
-Here you should say what actually happens when you execute the code above.
-
-### Initial Configuration
-
-Some projects require initial configuration (e.g. access tokens or keys, `npm i`).
-This is the section where you would document those requirements.
-
-## Developing
-
-Here's a brief intro about what a developer must do in order to start developing
-the project further:
-
-```shell
-git clone https://github.com/your/awesome-project.git
-cd awesome-project/
-packagemanager install
-```
-
-And state what happens step-by-step.
-
 ### Units Tests
 
+Each directory contains unit tests placed in the `tests` subdirectory. These can be run using the following commands:  
+
 ```shell
-python setup.py test
+python Product_Insights/GTrends/tests/test_collect_gtrends_data.py
+python Product_Insights/Classification/tests/test_utils.py
+python Product_Insights/GTrends/tests/test_collect_gtrends_data.py
+python Product_Insights/Kitsune/tests/test_process_kitsune_data.py
+python Product_Insights/Sentiment/tests/test_utils.py
+python Product_Insights/Twitter/tests/test_process_twitter_data.py
 ```
-Sigh, maybe someday.
+The unittests are made using the `unittest` standard library module. Each unittest file contains a series of classes and each of these tests a specific function in the corresponding script. 
 
 
-## Features
-
-What's all the bells and whistles this project can perform?
-* What's the main functionality
-* You can also do another thing
-* If you get really randy, you can even do this
-
-
-#### Argument 1
-Type: `String`  
-Default: `'default value'`
-
-State what an argument does and how you can use it. If needed, you can provide
-an example below.
-
-Example:
-```bash
-awesome-project "Some other value"  # Prints "You're nailing this readme!"
-```
-
-#### Argument 2
-Type: `Number|Boolean`  
-Default: 100
-
-Copy-paste as many of these as you need.
-
-## Caveats 
-We have to wait a lot when using the apis 
-
-
-## Links
-
-Even though this information can be found inside the project on machine-readable
-format like in a .json file, it's good to include a summary of most useful
-links to humans using your project. You can include links like:
-
-- Project homepage: https://your.github.com/awesome-project/
-- Repository: https://github.com/your/awesome-project/
-- Issue tracker: https://github.com/your/awesome-project/issues
-  - In case of sensitive bugs like security vulnerabilities, please contact
-    my@email.com directly instead of using issue tracker. We value your effort
-    to improve the security and privacy of this project!
-- Related projects:
-  - Your other project: https://github.com/your/other-project/
-  - Someone else's project: https://github.com/someones/awesome-project/
-
-
-## Licensing
-Licensed under ... For details, see the LICENSE file.
-
-
-![SUMO logo](https://github.com/ophie200/sumo/blob/master/images/SUMO-logo.png)
