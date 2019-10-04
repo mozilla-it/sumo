@@ -155,7 +155,7 @@ def get_keywords_map(OUTPUT_DATASET, OUTPUT_BUCKET, local_keywords_file):
   # Test if local keywords file matches bq table, if not overwrite table 
   local_keywords_map = pd.read_csv(local_keywords_file, sep='\t')  
   if not local_keywords_map.equals(keywords_map):
-    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, table_name)
+    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, OUTPUT_DATASET, table_name)
     query_job = bq_client.query(query)
     keywords_map = query_job.to_dataframe()
 
