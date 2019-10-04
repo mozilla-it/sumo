@@ -24,7 +24,11 @@ bq_client = bigquery.Client()
 storage_client = storage.Client()
 
 def get_timeperiod(OUTPUT_DATASET, OUTPUT_TABLE):
-  ''' Return the current time and last time data was previously saved with this scipt '''
+  ''' Return the current time and last time data was previously saved with this script. 
+
+  If the output table doesn't exists, then a new table is created with the same name
+  and the returned start date is set as  2010-05-01. 
+  '''
   start_dt = datetime.datetime(2010, 5, 1).isoformat()
   end_dt = datetime.datetime.now().isoformat()
   
@@ -60,7 +64,11 @@ def load_data(INPUT_DATASET, INPUT_TABLE, start_dt, end_dt, limit=None):
       return(None)
 
 def language_analysis(df):
-  '''Guesses the language of each tweet'''
+  """ Adds language and confidence to df using the Google Could Language API
+
+  Note that the function can sometimes run into rate-limit restrictions, which is why
+  the calls are wrapped in a while loop, to ensure that the API is called for all rows.
+  """
   d_lang = {}
   d_confidence = {}
   for i, row in df.iterrows():
@@ -82,7 +90,10 @@ def language_analysis(df):
   return(df)
 
 def filter_language(df, lang='en', lang_confidence=0.8):
-  '''Filters out non-english tweets and removes lang columns'''
+  """ Filters non-english content
+  
+  Note that if there is no data left, the function implicitly returns None"""
+
   df = df[(df.language == lang)&(df.confidence >= lang_confidence)]
   df = df.drop(['language', 'confidence'], axis=1)
   if df.empty:
@@ -90,7 +101,12 @@ def filter_language(df, lang='en', lang_confidence=0.8):
   return(df)
 
 def run_sentiment_analysis(df):
-  '''Estimates the sentiment of each tweet'''
+  """ Adds score, magnitude and discrete_sentiment to df using the Google Could Sentiment API
+
+  Note that the function can sometimes run into rate-limit restrictions, which is why
+  the calls are wrapped in a while loop, to ensure that the API is called for all rows.
+  """
+
   sentiment_score = {}
   sentiment_magnitude = {}
   for i, row in df.iterrows():
@@ -117,7 +133,14 @@ def run_sentiment_analysis(df):
   return(df)
 
 def get_keywords_map(OUTPUT_DATASET, OUTPUT_BUCKET, local_keywords_file):
-  '''Load the keywords map''' 
+  '''Load the keywords map for use in determine_topics
+
+  This functions matches the content of the OUTPUT_DATASET.table_name bq table
+  with the content of the local_keywords_file. If these do not match then it overwrites
+  the content of the bq table, otherwise it just uses the table as is. 
+  '''
+
+
   table_name = 'keywords_map'
   query = 'SELECT * FROM `{0}.{1}`'.format(OUTPUT_DATASET, table_name)
   query_job = bq_client.query(query)
@@ -125,7 +148,7 @@ def get_keywords_map(OUTPUT_DATASET, OUTPUT_BUCKET, local_keywords_file):
     keywords_map = query_job.to_dataframe() 
   except NotFound:
     create_keywords_map(OUTPUT_DATASET, table_name)
-    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, table_name)
+    upload_keywords_map(OUTPUT_BUCKET, local_keywords_file, OUTPUT_DATASET, table_name)
     query_job = bq_client.query(query)
     keywords_map = query_job.to_dataframe()
 

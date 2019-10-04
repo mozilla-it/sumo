@@ -6,11 +6,14 @@ language_client = language.LanguageServiceClient()
 translate_client = translate.Client()
 
 def gc_detect_language(text):
+    """Calls the Google Cloud Language detection API"""
+
     result = translate_client.detect_language(text)
     return(result['confidence'], result['language'])
     
 def gc_sentiment(text, type=enums.Document.Type.PLAIN_TEXT,
                  language='en'):  
+    """Calls the Google Cloud Sentiment Analysis API"""
 
     document = types.Document(
             content=text,
@@ -22,6 +25,19 @@ def gc_sentiment(text, type=enums.Document.Type.PLAIN_TEXT,
     return(score, magnitude)
 
 def discretize_sentiment(score, magnitude, score_cutoff=0.2, magnitude_cutoff=0.5):
+    """Transforms the sentiment score and magnitude into positive, neutral or negative.
+
+    The Google Cloud Sentiment Analysis API returns both a sentiment score and a
+    sentiment magnitude. The score indicates the overall emotion of a document.
+    The magnitude indicates how much emotional content is present. This function 
+    transforms this first by looking at the magnitude. If the magnitude is less 
+    than the magnitude_cutoff, then the statement is interpreted as being neutral. 
+    If the magnitude is greater, but the absolute value of the score is less
+    than the score_cutoff, then the statement is also interpreted as being neutral. 
+    If the score is greater than the score_cutoff then statement is positive. 
+    If the score is less than the minus value of score_cutoff then the statement is negative.
+    """
+
     if magnitude < magnitude_cutoff:
         return(u'neutral') 
     elif score < -score_cutoff:
