@@ -185,9 +185,13 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
 def collect_data(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS, OUTPUT_BUCKET):
     last_update = check_last_update(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS)
     start_dt, end_dt = get_collection_period(last_update)
+    print('start_dt:' + start_dt + ', end_dt: ' + end_dt)
     if start_dt: 
         data = get_data(start_dt, end_dt)
         df_queries, df_queries_ts = process_data(data, end_dt)
+        
+        if not df_queries.empty:
+          save_results(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_BUCKET, df_queries, start_dt, end_dt) 
         if not df_queries_ts.empty:
           save_results(OUTPUT_DATASET, OUTPUT_TABLE_TS, OUTPUT_BUCKET, df_queries_ts, start_dt, end_dt) 
 
