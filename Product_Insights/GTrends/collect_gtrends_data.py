@@ -17,6 +17,7 @@ storage_client = storage.Client()
 translate_client = translate.Client()
 
 def check_last_update(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS):
+  """ Check for when the last time data was collected """
   qry_max_date = ("SELECT max(update_date) max_date FROM {0}.{1}")\
                    .format(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES)  
   query_job = bq_client.query(qry_max_date)
@@ -45,6 +46,13 @@ def get_collection_period(last_update):
     return(start_dt.isoformat(), end_dt.isoformat())
 
 def get_gtrend(keyword, geo='', timeframe='now 7-d'):
+    ''' Gets gGoogle trend data using the Pytrends module
+
+    This functions returns a df with the top related queries related to keyword.
+    It also loops over these queries and gets the relative search volume over the last week
+    for each search term. This is stored in the rising_queries_interest dict. The key over this 
+    dict are the search terms and the values are a df with the relative search volume
+    '''
     pytrends = TrendReq()
     pytrends.build_payload([keyword],  geo=geo, timeframe=timeframe)
     while True:
@@ -177,9 +185,13 @@ def save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_
 def collect_data(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS, OUTPUT_BUCKET):
     last_update = check_last_update(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_TABLE_TS)
     start_dt, end_dt = get_collection_period(last_update)
+    print('start_dt:' + start_dt + ', end_dt: ' + end_dt)
     if start_dt: 
         data = get_data(start_dt, end_dt)
         df_queries, df_queries_ts = process_data(data, end_dt)
+        
+        if not df_queries.empty:
+          save_results(OUTPUT_DATASET, OUTPUT_TABLE_QUERIES, OUTPUT_BUCKET, df_queries, start_dt, end_dt) 
         if not df_queries_ts.empty:
           save_results(OUTPUT_DATASET, OUTPUT_TABLE_TS, OUTPUT_BUCKET, df_queries_ts, start_dt, end_dt) 
 

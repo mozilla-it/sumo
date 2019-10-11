@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 from google.cloud import storage
 storage_client = storage.Client()
 
+
 def main():
   parser = argparse.ArgumentParser(description="SUMO Survey Gizmo main arguments")
   parser.add_argument('--outdir', nargs='?', const='.', type=str, help='file output directory')

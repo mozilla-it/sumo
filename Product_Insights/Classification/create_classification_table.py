@@ -13,7 +13,6 @@ def create_keywords_map(dataset_name, table_name):
   table_ref = dataset_ref.table(table_name)
   table = bigquery.Table(table_ref, schema=schema)
   table = client.create_table(table)
-  print('hey')
 
 def main(OUTPUT_DATASET, OUTPUT_TABLE):
   create_keywords_map(OUTPUT_DATASET, OUTPUT_TABLE)
