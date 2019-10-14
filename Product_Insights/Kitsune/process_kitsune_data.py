@@ -181,7 +181,7 @@ def get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABL
 def get_sentiment(df):
   df = language_analysis(df)
   df = filter_language(df)
-  if df: 
+  if not df.empty: 
     df = run_sentiment_analysis(df)
   return(df)
 
@@ -193,7 +193,7 @@ def process_data(INPUT_DATASET, INPUT_TABLE, OUTPUT_DATASET, OUTPUT_TABLE, OUTPU
   df, start_dt, end_dt = get_unprocessed_data(OUTPUT_DATASET, OUTPUT_TABLE, INPUT_DATASET, INPUT_TABLE)
   if not df.empty:
     df = get_sentiment(df)
-    if df: 
+    if not df.empty: 
       df = strip_html_tags(df)
       save_results(OUTPUT_DATASET, OUTPUT_TABLE, OUTPUT_BUCKET, df, start_dt, end_dt)
 
