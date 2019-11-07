@@ -116,7 +116,8 @@ def update_answers():
   start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
-  qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_answers_raw")
+  # get max_date converted from UTC to PST
+  qry_max_date = ("""SELECT DATETIME(max(updated), "America/Los_Angeles") max_date FROM {0} """).format(dataset_name + ".kitsune_answers_raw")
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() 
   max_date = pd.to_datetime(max_date_result['max_date'].values[0])
@@ -169,7 +170,8 @@ def update_questions():
   start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
-  qry_max_date = ("""SELECT max(updated) max_date FROM {0} """).format(dataset_name + ".kitsune_questions_raw")
+  # get max_date converted from UTC to PST
+  qry_max_date = ("""SELECT DATETIME(max(updated), "America/Los_Angeles") max_date FROM {0} """).format(dataset_name + ".kitsune_questions_raw")
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() 
   max_date = pd.to_datetime(max_date_result['max_date'].values[0])
@@ -236,6 +238,7 @@ def analyze_word_freq():
   start_dt = datetime(2010, 5, 1).date()
   end_dt = datetime.today().date() # + timedelta(1)
   
+  #Keep everything in UTC per BQ since we are not invoking the Kitsune API
   qry_max_date = ("""SELECT max(kitsune_dt) max_date FROM {0} """).format(dataset_name + ".kitsune_word_frequencies")
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() 
