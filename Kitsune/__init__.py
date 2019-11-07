@@ -2,8 +2,10 @@ import json
 import requests
 import logging
 import math
+import pytz
 
 from datetime import datetime, timedelta
+from pytz import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +25,14 @@ logger = logging.getLogger(__name__)
 
 # do delta? of max created date? or last updated date?
 
-
+def convert_pst_to_utc(dt_str):
+  fmt = '%Y-%m-%dT%H:%M:%SZ'
+  pacific=pytz.timezone('US/Pacific')
+  loc_dt = pacific.localize(datetime.strptime(dt_str,fmt))
+  dt_utc = loc_dt.astimezone(pytz.utc) #dt.datetime.strptime(loc_dt, fmt)
+  #print('dt_str:' + dt_str + ', dt_utc:' + dt_utc.strftime(fmt))
+  return dt_utc.strftime(fmt)
+    
 
 def get_answer(survey_data_row, question_num, default):
     try:
@@ -40,7 +49,7 @@ def get_answer(survey_data_row, question_num, default):
 # metadata (array of key-value pairs) 
 
 def get_question_data_row(row):
-	return [row['id'], row['content'].replace("\n", "\\n"), row['created'], row['creator']['username'], row['updated'], row['updated_by'],
+	return [row['id'], row['content'].replace("\n", "\\n"), convert_pst_to_utc(row['created']), row['creator']['username'], convert_pst_to_utc(row['updated']), row['updated_by'],
 			row.get('is_solved',False), row.get('locale',''), row.get('product',''), row.get('title',''), row.get('topic',''),
 			row.get('solution',''), row.get('solved_by',''), row.get('num_votes',0), row.get('num_votes_past_week',0),
 			row.get('last_answer',''), row.get('metadata',''), row.get('tags',''), row.get('answers','') #, frt(row['created'], row.get('answers',''))
@@ -115,8 +124,8 @@ def get_question_data(api_url_base, params):
 #.is_spam, .num_helpful_votes, ,num_unhelpful_votes
 
 def get_answer_data_row(row):
-	return [row['id'], row.get('question',''), row['content'].replace("\n", "\\n"), row['created'], row['creator']['username'],
-			row['updated'], row['updated_by'], row['is_spam'], row['num_helpful_votes'], row['num_unhelpful_votes']
+	return [row['id'], row.get('question',''), row['content'].replace("\n", "\\n"), convert_pst_to_utc(row['created']), row['creator']['username'],
+			convert_pst_to_utc(row['updated']), row['updated_by'], row['is_spam'], row['num_helpful_votes'], row['num_unhelpful_votes']
 			]
 
 def get_answer_data(api_url_base, params):
