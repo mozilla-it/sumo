@@ -14,6 +14,18 @@ def create_ga_total_users():
   table = client.create_table(table)  # API request
 
   assert table.table_id == 'ga_total_users'
+  
+
+def create_ga_total_users_kb():
+  schema = [
+    bigquery.SchemaField('ga_date', 'DATE', mode='NULLABLE'),
+    bigquery.SchemaField('ga_users', 'INTEGER', mode='NULLABLE')
+  ]
+  table_ref = dataset_ref.table('ga_total_users_kb')
+  table = bigquery.Table(table_ref, schema=schema)
+  table = client.create_table(table)  # API request
+
+  assert table.table_id == 'ga_total_users_kb'
 
 
 def create_ga_users_by_country():
@@ -89,13 +101,14 @@ def create_ga_search_ctr():
     
 def main():
   
-  create_ga_total_users()
-  create_ga_users_by_country()
-  create_ga_inproduct_vs_organic()
-  create_ga_kb_exit_rate()
-  create_ga_questions_exit_rate()
-  create_ga_search_ctr()
-  create_ga_questions_exit_rate()
+  #create_ga_total_users()
+  create_ga_total_users_kb()
+  #create_ga_users_by_country()
+  #create_ga_inproduct_vs_organic()
+  #create_ga_kb_exit_rate()
+  #create_ga_questions_exit_rate()
+  #create_ga_search_ctr()
+  #create_ga_questions_exit_rate()
 
 
 if __name__ == '__main__':
