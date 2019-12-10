@@ -86,7 +86,24 @@ def get_total_users(analytics, startDate, endDate):
         }]
       }
   ).execute()
-  
+
+
+def get_total_users_kb(analytics, startDate, endDate):
+  """Queries all users who have visited support.mozilla.org/kb/*
+  """
+  return analytics.reports().batchGet(
+      body={
+        'reportRequests': [
+        {
+          'viewId': VIEW_ID,
+          'dateRanges': [{'startDate': startDate, 'endDate': endDate}], #'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+          'metrics': [{'expression': 'ga:users'}],
+          'dimensions': [{'name': 'ga:date'}],
+          "dimensionFilterClauses": [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:pagePath", "expressions": ["/kb"]} ] }],
+        }]
+      }
+  ).execute()
+
 
 def get_inproduct_vs_organic(analytics, startDate, endDate):
   """Queries the Analytics Reporting API V4.
@@ -305,7 +322,6 @@ def add_response_to_results(response, results):
     for row in report.get('data', {}).get('rows', []):
       dimensions = row.get('dimensions', [])
       dateRangeValues = row.get('metrics', [])
-      #print(row)
 
       row = []
       for header, dimension in zip(dimensionHeaders, dimensions):
@@ -352,6 +368,39 @@ def run_total_users(analytics, start_dt, end_dt):
   blob.upload_from_filename("/tmp/" + fn)
   
   update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users')  
+
+
+def run_total_users_kb(analytics, start_dt, end_dt):
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_total_users_kb")
+  query_job = bq_client.query(qry_max_date)
+  max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
+  max_date = max_date_result['max_date'].values[0]
+
+  # if start_date < max_date, then start_date=max_date  
+  if max_date is not None and start_dt <= max_date: 
+    start_dt = max_date + timedelta(1)
+  if end_dt<=max_date:
+    print( ("run_total_users: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
+    return
+  if start_dt>=end_dt:
+    print( ("run_total_users: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
+    return
+  
+  print( start_dt)
+  
+  fn = "ga_data_total_users_kb_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
+  
+  response = get_total_users_kb(analytics, start_dt.strftime("%Y-%m-%d"), end_dt.strftime("%Y-%m-%d"))
+  results = []
+  # write csv file to gs sumo folder for processing to BQ
+  df = pd.DataFrame.from_records(add_response_to_results(response, results), columns=['ga_date', 'ga_users']) 
+  df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
+  df.to_csv("/tmp/" + fn, index=False)
+
+  blob = sumo_bucket.blob("googleanalytics/" + fn)
+  blob.upload_from_filename("/tmp/" + fn)
+  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users_kb')  
 
 
 def run_search_ctr(analytics, start_dt, end_dt):
@@ -564,6 +613,8 @@ def main(start_date=None, end_date=None):
   # construct filename from either start/end date vars or from BQ
   
   run_total_users(analytics, start_date, end_date)
+  
+  run_total_users_kb(analytics, start_date, end_date)
   
   run_users_by_country(analytics, start_date, end_date)
   
