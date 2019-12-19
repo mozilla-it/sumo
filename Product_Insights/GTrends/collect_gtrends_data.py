@@ -5,7 +5,7 @@ import pandas as pd
 
 from google.cloud import bigquery
 from google.cloud import storage
-from google.cloud import translate
+from google.cloud import translate_v2 as translate
 from google.cloud.exceptions import NotFound, Forbidden
 from pytrends.request import TrendReq
 
