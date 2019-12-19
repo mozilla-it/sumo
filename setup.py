@@ -18,6 +18,7 @@ setup(name='sumo',
       packages=['SurveyGizmo','ReleaseCalendar','ReleaseCalendar','Kitsune','GoogleAnalytics','Twitter','Product_Insights'],
       install_requires=[
           'requests',
+          'six<2.0.0dev,>=1.13.0',
           'grpcio>=1.8.2',
           'google-cloud-logging',
           'google-cloud-storage',
