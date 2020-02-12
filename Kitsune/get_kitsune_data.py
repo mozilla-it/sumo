@@ -132,7 +132,7 @@ def update_answers():
   
   url = "https://support.mozilla.org/api/2/answer"
   #url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US'} #,'page': '50000'} #, 'results_per_page': '500'} up to 56297?
-  url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__gt': start_dt.strftime("%Y-%m-%d")} #,'page': '12000'} #, 'page': '18463'}
+  url_params= {'format': 'json', 'updated__gt': start_dt.strftime("%Y-%m-%d")} #,'page': '12000'} #, 'page': '18463'}
 
   with open("/tmp/" + fn, "w", encoding='utf8') as f:
       csv.register_dialect('myDialect', delimiter = ',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
@@ -185,7 +185,7 @@ def update_questions():
   print(fn)
 
   url = "https://support.mozilla.org/api/2/question"
-  url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__gt': start_dt.strftime("%Y-%m-%d")} #,'page': '12000'} #, 'page': '18463'}
+  url_params= {'format': 'json', 'updated__gt': start_dt.strftime("%Y-%m-%d")} #,'page': '12000'} #, 'page': '18463'}
   #url_params= {'format': 'json', 'product': 'firefox', 'locale': 'en-US', 'updated__lt': '2019-03-25', 'updated__gt': '2019-1-1'} #,'page': '12000'} #, 'page': '18463'}
   #url_params = {:format => "json",:product => "firefox", :locale => "en-US", :ordering => "+created", 'results_per_page': '500'}
 
