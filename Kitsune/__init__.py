@@ -50,7 +50,7 @@ def get_answer(survey_data_row, question_num, default):
 
 def get_question_data_row(row):
 	return [row['id'], row['content'].replace("\n", "\\n"), convert_pst_to_utc(row['created']), row['creator']['username'], convert_pst_to_utc(row['updated']), row['updated_by'],
-			row.get('is_solved',False), row.get('locale',''), row.get('product',''), row.get('title',''), row.get('topic',''),
+			row.get('is_solved',False), row.get('locale',''), row.get('product',''), row.get('title','').replace("\n","\\n"), row.get('topic',''),
 			row.get('solution',''), row.get('solved_by',''), row.get('num_votes',0), row.get('num_votes_past_week',0),
 			row.get('last_answer',''), row.get('metadata',''), row.get('tags',''), row.get('answers','') #, frt(row['created'], row.get('answers',''))
 			]
