@@ -288,8 +288,9 @@ def fetch_data(fn, query, fields, format_fn, upload):
     try:
         conn = mysql.connector.connect(host='127.0.0.1', port=3306,
                                        database='kitsune',
-                                       user='root',
-                                       password='Phantom22')
+                                       user='root')
+                                       #user='root',
+                                       #password='Phantom22')
         if conn.is_connected():
                 print('Connected to MySQL database')
     
@@ -322,15 +323,16 @@ def fetch_data(fn, query, fields, format_fn, upload):
     except Error as e:
         print(e)
     finally:
-        conn.close()
+        pass
+        #conn.close()
 
 
 def fetch_data_json(fn, query, fields, format_fn, upload):
     try:
         conn = mysql.connector.connect(host='127.0.0.1', port=3306,
                                        database='kitsune',
-                                       user='root',
-                                       password='Phantom22')
+                                       user='root')
+                                       #password='Phantom22')
         if conn.is_connected():
                 print('Connected to MySQL database')
     
@@ -693,20 +695,20 @@ def get_wiki_helpfulvote_data():
     write_disposition = "WRITE_TRUNCATE" 
     query = ("SELECT * FROM wiki_helpfulvote WHERE created <= '2013-12-31'")
     fetch_data("wiki_helpfulvote_1.csv", query, fields, format_wiki_helpfulvote, upload)
-    subprocess.run(["gsutil", "-m", "cp", "/tmp/wiki_helpfulvote_1.json", "gs://moz-it-data-sumo/kitsune/"])
-    update_bq_table("gs://moz-it-data-sumo/kitsune/", "wiki_helpfulvote_1.csv", 'kitsune_wiki_helpfulvote', schema)
+    subprocess.run(["gsutil", "-m", "cp", "/tmp/wiki_helpfulvote_1.csv", "gs://moz-it-data-sumo/kitsune/"])
+    update_bq_table("gs://moz-it-data-sumo/kitsune/", "wiki_helpfulvote_1.csv", 'kitsune_wiki_helpfulvote', schema, write_disposition)
     
     write_disposition = "WRITE_APPEND" 
     query = ("SELECT * FROM wiki_helpfulvote WHERE created > '2013-12-31' and created <= '2016-12-31'") 
     fetch_data("wiki_helpfulvote_2.csv", query, fields, format_wiki_helpfulvote, upload)
-    subprocess.run(["gsutil", "-m", "cp", "/tmp/wiki_helpfulvote_2.json", "gs://moz-it-data-sumo/kitsune/"])
-    update_bq_table("gs://moz-it-data-sumo/kitsune/", "wiki_helpfulvote_2.csv", 'kitsune_wiki_helpfulvote', schema)
+    subprocess.run(["gsutil", "-m", "cp", "/tmp/wiki_helpfulvote_2.csv", "gs://moz-it-data-sumo/kitsune/"])
+    update_bq_table("gs://moz-it-data-sumo/kitsune/", "wiki_helpfulvote_2.csv", 'kitsune_wiki_helpfulvote', schema, write_disposition)
 
     write_disposition = "WRITE_APPEND" 
     query = ("SELECT * FROM wiki_helpfulvote WHERE created > '2016-12-31'")
     fetch_data("wiki_helpfulvote_3.csv", query, fields, format_wiki_helpfulvote, upload)
-    subprocess.run(["gsutil", "-m", "cp", "/tmp/wiki_helpfulvote_3.json", "gs://moz-it-data-sumo/kitsune/"])
-    update_bq_table("gs://moz-it-data-sumo/kitsune/", "wiki_helpfulvote_3.csv", 'kitsune_wiki_helpfulvote', schema)
+    subprocess.run(["gsutil", "-m", "cp", "/tmp/wiki_helpfulvote_3.csv", "gs://moz-it-data-sumo/kitsune/"])
+    update_bq_table("gs://moz-it-data-sumo/kitsune/", "wiki_helpfulvote_3.csv", 'kitsune_wiki_helpfulvote', schema, write_disposition)
     
 
 def get_auth_user_data():
@@ -735,22 +737,22 @@ def get_auth_user_data():
 def main():
 
     # these can all be formatted, uploaded and updated db in one shot
-    get_forums_forum_data()
-    get_forums_post_data()
-    get_forums_thread_data()
-    get_kbforums_post_data()
-    get_kbforums_thread_data()
-    get_wiki_document_products_data()
-    get_wiki_document_topics_data()
-    get_wiki_document_contributors_data()
-    get_wiki_locale_data()
-    get_products_product_data()
-    
-    # these are large files that will take a while to run
-    get_wiki_document_data() # ndjsonified because of fields containing double quotes
-    get_wiki_revision_data()
-    get_auth_user_data()
-    
+#    get_forums_forum_data()
+#    get_forums_post_data()
+#    get_forums_thread_data()
+#    get_kbforums_post_data()
+#    get_kbforums_thread_data()
+#    get_wiki_document_products_data()
+#    get_wiki_document_topics_data()
+#    get_wiki_document_contributors_data()
+#    get_wiki_locale_data()
+#    get_products_product_data()
+#    
+#    # these are large files that will take a while to run
+#    get_wiki_document_data() # ndjsonified because of fields containing double quotes
+#    get_wiki_revision_data()
+#    get_auth_user_data()
+#    
     # this take a mega long time to upload/run
     get_wiki_helpfulvote_data()
     # please check that mysql table rows match what's been loaded in bq esp for wiki_helpful vote
