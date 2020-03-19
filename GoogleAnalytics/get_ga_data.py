@@ -31,6 +31,34 @@ def daterange(start_date, end_date):
     yield start_date + timedelta(n)
 
 
+def get_dimension_filter_clauses_fenix(dim_name):
+    return([
+      {"filters":
+        [
+          {
+            "operator": "REGEXP",
+            "dimensionName": dim_name,
+            "expressions": [".*/kb/.*firefox-preview.*"]
+          },
+          {
+            "operator": "PARTIAL",
+            "dimensionName": dim_name,
+            "expressions": ["/kb/firefox-sync-troubleshooting-and-tips"]
+          },
+          {
+            "operator": "PARTIAL",
+            "dimensionName": dim_name,
+            "expressions": ["/kb/send-usage-data-firefox-mobile-browsers"]
+          },
+          {
+            "operator": "PARTIAL",
+            "dimensionName": dim_name,
+            "expressions": ["/kb/firefox-sync-troubleshooting-and-tips"]
+          },
+        ]
+      }
+    ])
+
 def initialize_analyticsreporting():
   """Initializes an Analytics Reporting API V4 service object.
 
@@ -88,9 +116,14 @@ def get_total_users(analytics, startDate, endDate):
   ).execute()
 
 
-def get_total_users_kb(analytics, startDate, endDate):
+def get_total_users_kb(analytics, startDate, endDate, subset_name):
   """Queries all users who have visited support.mozilla.org/kb/*
   """
+
+  dimension_filter_clauses = [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:pagePath", "expressions": ["/kb"]} ] }]
+  if subset_name == "_fenix":
+    dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
+
   return analytics.reports().batchGet(
       body={
         'reportRequests': [
@@ -99,15 +132,58 @@ def get_total_users_kb(analytics, startDate, endDate):
           'dateRanges': [{'startDate': startDate, 'endDate': endDate}], #'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
           'metrics': [{'expression': 'ga:users'}],
           'dimensions': [{'name': 'ga:date'}],
-          "dimensionFilterClauses": [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:pagePath", "expressions": ["/kb"]} ] }],
+          "dimensionFilterClauses": dimension_filter_clauses,
         }]
       }
   ).execute()
 
-
-def get_inproduct_vs_organic(analytics, startDate, endDate):
+def get_inproduct_vs_organic(analytics, startDate, endDate, subset_name):
   """Queries the Analytics Reporting API V4.
   """
+
+  segments = [{ "dynamicSegment": {
+                  "name":"In-product",
+                  "sessionSegment": {
+                      "segmentFilters":[{
+                          "simpleSegment": {
+                              "orFiltersForSegment":[{
+                                  "segmentFilterClauses":[{
+                                      "dimensionFilter": {
+                                          "dimensionName":"ga:source",
+                                          "expressions":["inproduct"],
+                                          "operator":"EXACT"
+                                      }
+                                  }]
+                              }]
+                          }
+                      }]
+                  }
+                }
+              },{
+                "dynamicSegment": {
+                  "name":"Organic",
+                  "sessionSegment": {
+                      "segmentFilters":[{
+                          "simpleSegment": {
+                              "orFiltersForSegment":[{
+                                  "segmentFilterClauses":[{
+                                      "dimensionFilter": {
+                                          "dimensionName":"ga:medium",
+                                          "expressions":["organic"],
+                                          "operator":"EXACT"
+                                      }
+                                  }]
+                              }]
+                          }
+                      }]
+                  }
+                }
+              }]
+
+  dimension_filter_clauses = []
+  if subset_name == "_fenix":
+    dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
+
   return analytics.reports().batchGet(
       body={
         'reportRequests': [{
@@ -115,63 +191,10 @@ def get_inproduct_vs_organic(analytics, startDate, endDate):
           'dateRanges': [{'startDate': startDate, 'endDate': endDate}],
           'metrics': [{'expression': 'ga:users'}, {'expression': 'ga:sessions'}],
           'dimensions': [{'name': 'ga:date'}, {'name': 'ga:segment'}],
-          "segments":[
-      {
-        "dynamicSegment":
-        {
-          "name":"In-product",
-          "sessionSegment":
-          {
-            "segmentFilters":[
-            {
-              "simpleSegment":
-              {
-                "orFiltersForSegment":[
-                {
-                  "segmentFilterClauses":[
-                  {
-                    "dimensionFilter":
-                    {
-                      "dimensionName":"ga:source",
-                      "expressions":["inproduct"],
-                      "operator":"EXACT"
-                    }
-                  }]
-                }]
-              }
-            }]
-          }
-        }
-      },
-      {
-        "dynamicSegment":
-        {
-          "name":"Organic",
-          "sessionSegment":
-          {
-            "segmentFilters":[
-            {
-              "simpleSegment":
-              {
-                "orFiltersForSegment":[
-                {
-                  "segmentFilterClauses":[
-                  {
-                    "dimensionFilter":
-                    {
-                      "dimensionName":"ga:medium",
-                      "expressions":["organic"],
-                      "operator":"EXACT"
-                    }
-                  }]
-                }]
-              }
-            }]
-          }
-        }
-      }]
-    }]
-  }).execute() 
+          "dimensionFilterClauses": dimension_filter_clauses,
+          "segments": segments,
+        }]
+    }).execute() 
 #metric ga:organicSearches ga:sessions ga:users
 #dim {'name': 'ga:source'}, medium, ga:sourceMedium, ga:channelGrouping
 #inproduct
@@ -247,9 +270,13 @@ def get_search_ctr_users(analytics, startDate, endDate):
 # % of people who searched and clicked (event) - metric is users not ga:uniqueEvents??
 
 
-def get_kb_exit_rate(analytics, startDate, endDate):
+def get_kb_exit_rate(analytics, startDate, endDate, subset_name):
   """Queries the Analytics Reporting API V4.
   """
+  dimension_filter_clauses = [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:exitPagePath", "expressions": ["/kb"]} ] }]
+  if subset_name == "_fenix":
+    dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:exitPagePath")
+
   return analytics.reports().batchGet(
       body={
         'reportRequests': [{
@@ -259,7 +286,7 @@ def get_kb_exit_rate(analytics, startDate, endDate):
           #"metricFilterClauses": [{ object(MetricFilterClause) }],
           "orderBys": [{ "fieldName": 'ga:pageviews', "sortOrder": 'DESCENDING' }],
           'dimensions': [{'name': 'ga:date'}, {'name': 'ga:exitPagePath'}],
-          "dimensionFilterClauses": [{"filters": [ {"dimensionName": "ga:exitPagePath","operator": "PARTIAL","expressions": ["/kb/"]} ] }],
+          "dimensionFilterClauses": dimension_filter_clauses
           #"pageSize": 20
         }]
       }
@@ -370,8 +397,11 @@ def run_total_users(analytics, start_dt, end_dt):
   update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users')  
 
 
-def run_total_users_kb(analytics, start_dt, end_dt):
-  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_total_users_kb")
+def run_total_users_kb(analytics, start_dt, end_dt, subset_name=""):
+  if len(subset_name) > 0 and subset_name[0] != "_":
+    subset_name = "_" + subset_name
+
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_total_users_kb" + subset_name)
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
   max_date = max_date_result['max_date'].values[0]
@@ -379,18 +409,18 @@ def run_total_users_kb(analytics, start_dt, end_dt):
   # if start_date < max_date, then start_date=max_date  
   if max_date is not None and start_dt <= max_date: 
     start_dt = max_date + timedelta(1)
-  if end_dt<=max_date:
-    print( ("run_total_users: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
+  if max_date and end_dt<=max_date:
+    print( ("run_total_users_kb{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date,subset_name) )
     return
   if start_dt>=end_dt:
-    print( ("run_total_users: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
+    print( ("run_total_users_kb{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt,subset_name) )
     return
   
   print( start_dt)
   
-  fn = "ga_data_total_users_kb_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
+  fn = "ga_data_total_users_kb" + subset_name + "_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
   
-  response = get_total_users_kb(analytics, start_dt.strftime("%Y-%m-%d"), end_dt.strftime("%Y-%m-%d"))
+  response = get_total_users_kb(analytics, start_dt.strftime("%Y-%m-%d"), end_dt.strftime("%Y-%m-%d"), subset_name)
   results = []
   # write csv file to gs sumo folder for processing to BQ
   df = pd.DataFrame.from_records(add_response_to_results(response, results), columns=['ga_date', 'ga_users']) 
@@ -400,7 +430,7 @@ def run_total_users_kb(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users_kb')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users_kb' + subset_name)  
 
 
 def run_search_ctr(analytics, start_dt, end_dt):
@@ -437,26 +467,30 @@ def run_search_ctr(analytics, start_dt, end_dt):
   update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_search_ctr')  
 
 
-def run_inproduct_vs_organic(analytics, start_dt, end_dt):
-  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_inproduct_vs_organic")
+def run_inproduct_vs_organic(analytics, start_dt, end_dt, subset_name=""):
+
+  if len(subset_name) > 0 and subset_name[0] != "_":
+    subset_name = "_" + subset_name
+
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_inproduct_vs_organic" + subset_name)
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  if end_dt<=max_date:
-    print( ("run_inproduct_vs_organic: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
+  if max_date and start_dt <= max_date: start_dt = max_date + timedelta(1)
+  if max_date and end_dt<=max_date:
+    print( ("run_inproduct_vs_organic{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date, subset_name) )
     return
   if start_dt>=end_dt:
-    print( ("run_inproduct_vs_organic: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
+    print( ("run_inproduct_vs_organic{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt, subset_name) )
     return
     
   print( start_dt)
   
-  fn = "ga_data_inproduct_vs_organic_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
+  fn = "ga_data_inproduct_vs_organic" + subset_name + "_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
 
-  response = get_inproduct_vs_organic(analytics, start_dt.strftime("%Y-%m-%d"), end_dt.strftime("%Y-%m-%d"))
+  response = get_inproduct_vs_organic(analytics, start_dt.strftime("%Y-%m-%d"), end_dt.strftime("%Y-%m-%d"), subset_name)
   results = []
   # write csv file to gs sumo folder for processing to BQ
   df = pd.DataFrame.from_records(add_response_to_results(response, results), columns=["ga_date","ga_segment","ga_users","ga_sessions"]) 
@@ -468,25 +502,29 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt):
   
   print('File {} uploaded to {}.'.format("/tmp/" + fn, "googleanalytics/" + fn))
 
-  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic' + subset_name)  
 
 
-def run_kb_exit_rate(analytics, start_dt, end_dt):
-  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_kb_exit_rate")
+def run_kb_exit_rate(analytics, start_dt, end_dt, subset_name=""):
+  
+  if len(subset_name) > 0 and subset_name[0] != "_":
+    subset_name = "_" + subset_name
+
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_kb_exit_rate" + subset_name)
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  if end_dt<=max_date:
-    print( ("run_kb_exit_rate: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
+  if max_date and start_dt <= max_date: start_dt = max_date + timedelta(1)
+  if max_date and end_dt<=max_date:
+    print( ("run_kb_exit_rate{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date,subset_name) )
     return
   if start_dt>=end_dt:
-    print( ("run_kb_exit_rate: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt) )
+    print( ("run_kb_exit_rate{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt,subset_name) )
     return
   
-  fn = "ga_data_kb_exit_rate_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
+  fn = "ga_data_kb_exit_rate" + subset_name + "_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
 
   df = pd.DataFrame()
   
@@ -494,8 +532,9 @@ def run_kb_exit_rate(analytics, start_dt, end_dt):
     dt_str = dt.strftime("%Y-%m-%d")
     print(dt_str)
     results = []
-    response = get_kb_exit_rate(analytics, dt_str, dt_str)
+    response = get_kb_exit_rate(analytics, dt_str, dt_str, subset_name)
     df = df.append( pd.DataFrame.from_records(add_response_to_results(response, results), columns=["ga_date","ga_exitPagePath","ga_exitRate","ga_exits","ga_pageviews"]) )
+    time.sleep(2) # google api restrictions
 
   df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
   df.to_csv("/tmp/" + fn, index=False)
@@ -503,7 +542,7 @@ def run_kb_exit_rate(analytics, start_dt, end_dt):
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_kb_exit_rate')  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_kb_exit_rate' + subset_name)  
 
 
 def run_questions_exit_rate(analytics, start_dt, end_dt):
@@ -513,8 +552,8 @@ def run_questions_exit_rate(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  if end_dt<=max_date:
+  if max_date and start_dt <= max_date: start_dt = max_date + timedelta(1)
+  if max_date and end_dt<=max_date:
     print( ("run_questions_exit_rate: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
   if start_dt>=end_dt:
@@ -531,6 +570,7 @@ def run_questions_exit_rate(analytics, start_dt, end_dt):
     results = []
     response = get_questions_exit_rate(analytics, dt_str, dt_str)
     df = df.append( pd.DataFrame.from_records(add_response_to_results(response, results), columns=["ga_date","ga_exitPagePath","ga_exitRate","ga_exits","ga_pageviews"]) )
+    time.sleep(2) # google api restrictions
 
   df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
   df.to_csv("/tmp/" + fn, index=False)
@@ -548,8 +588,8 @@ def run_users_by_country(analytics, start_dt, end_dt):
   max_date = max_date_result['max_date'].values[0]
 
   # if start_date < max_date, then start_date=max_date  
-  if start_dt <= max_date: start_dt = max_date + timedelta(1)
-  if end_dt<=max_date:
+  if max_date and start_dt <= max_date: start_dt = max_date + timedelta(1)
+  if max_date and end_dt<=max_date:
     print( ("run_users_by_country: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date) )
     return
   if start_dt>=end_dt:
@@ -566,6 +606,7 @@ def run_users_by_country(analytics, start_dt, end_dt):
     results = []
     response = get_users_by_country(analytics, dt_str, dt_str)
     df = df.append( pd.DataFrame.from_records(add_response_to_results(response, results), columns=['ga_date', 'ga_country', 'ga_users']) )
+    time.sleep(2) # google api restrictions
 
   df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
   df.to_csv("/tmp/" + fn, index=False)
@@ -605,7 +646,7 @@ def main(start_date=None, end_date=None):
   #end_date = date(2019, 5, 1) # exclusive
 
   if start_date is None:
-    start_date = date(2019, 3, 1) # inclusive
+    start_date = date(2020, 1, 1) # inclusive
     end_date = datetime.today().date() # exclusive
 
   analytics = initialize_analyticsreporting()
@@ -615,12 +656,18 @@ def main(start_date=None, end_date=None):
   run_total_users(analytics, start_date, end_date)
   
   run_total_users_kb(analytics, start_date, end_date)
+
+  run_total_users_kb(analytics, start_date, end_date, "fenix")
   
   run_users_by_country(analytics, start_date, end_date)
   
   run_inproduct_vs_organic(analytics, start_date, end_date)
 
+  run_inproduct_vs_organic(analytics, start_date, end_date, "fenix")
+
   run_kb_exit_rate(analytics, start_date, end_date)
+
+  run_kb_exit_rate(analytics, start_date, end_date, "fenix")
 
   run_questions_exit_rate(analytics, start_date, end_date)
 
@@ -634,7 +681,7 @@ if __name__ == '__main__':
   
   #hmmm no dedupe process
   # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
-  start_date = date(2019, 3, 1) # inclusive
+  start_date = date(2020, 1, 1) # inclusive
   end_date = datetime.today().date() - timedelta(days=2) # exclusive
   
   main(start_date, end_date)
