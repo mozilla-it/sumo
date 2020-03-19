@@ -121,7 +121,7 @@ def get_total_users_kb(analytics, startDate, endDate, subset_name):
   """
 
   dimension_filter_clauses = [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:pagePath", "expressions": ["/kb"]} ] }]
-  if subset_name == "_fenix":
+  if subset_name == "fenix":
     dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
 
   return analytics.reports().batchGet(
@@ -181,7 +181,7 @@ def get_inproduct_vs_organic(analytics, startDate, endDate, subset_name):
               }]
 
   dimension_filter_clauses = []
-  if subset_name == "_fenix":
+  if subset_name == "fenix":
     dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
 
   return analytics.reports().batchGet(
@@ -274,7 +274,7 @@ def get_kb_exit_rate(analytics, startDate, endDate, subset_name):
   """Queries the Analytics Reporting API V4.
   """
   dimension_filter_clauses = [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:exitPagePath", "expressions": ["/kb"]} ] }]
-  if subset_name == "_fenix":
+  if subset_name == "fenix":
     dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:exitPagePath")
 
   return analytics.reports().batchGet(
@@ -398,10 +398,15 @@ def run_total_users(analytics, start_dt, end_dt):
 
 
 def run_total_users_kb(analytics, start_dt, end_dt, subset_name=""):
-  if len(subset_name) > 0 and subset_name[0] != "_":
-    subset_name = "_" + subset_name
 
-  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_total_users_kb" + subset_name)
+  suffix = ""
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0}""") \
+                .format(dataset_name + ".ga_total_users_kb")
+  if len(subset_name) > 0:
+    qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} WHERE product=\"{1}\"""") \
+                   .format(dataset_name + ".ga_total_users_kb_by_product", subset_name)
+    suffix = "_by_product"
+
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
   max_date = max_date_result['max_date'].values[0]
@@ -410,27 +415,33 @@ def run_total_users_kb(analytics, start_dt, end_dt, subset_name=""):
   if max_date is not None and start_dt <= max_date: 
     start_dt = max_date + timedelta(1)
   if max_date and end_dt<=max_date:
-    print( ("run_total_users_kb{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date,subset_name) )
+    print( ("run_total_users_kb_{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date,subset_name) )
     return
   if start_dt>=end_dt:
-    print( ("run_total_users_kb{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt,subset_name) )
+    print( ("run_total_users_kb_{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt, subset_name) )
     return
   
   print( start_dt)
   
-  fn = "ga_data_total_users_kb" + subset_name + "_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
+  fn = "ga_data_total_users_kb_" + subset_name + "_" + start_dt.strftime("%Y%m%d") + \
+       "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
   
-  response = get_total_users_kb(analytics, start_dt.strftime("%Y-%m-%d"), end_dt.strftime("%Y-%m-%d"), subset_name)
+  response = get_total_users_kb(analytics,
+                                start_dt.strftime("%Y-%m-%d"),
+                                end_dt.strftime("%Y-%m-%d"),
+                                subset_name)
   results = []
   # write csv file to gs sumo folder for processing to BQ
   df = pd.DataFrame.from_records(add_response_to_results(response, results), columns=['ga_date', 'ga_users']) 
   df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
+  if subset_name != "":
+    df["product"] = subset_name
   df.to_csv("/tmp/" + fn, index=False)
 
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
   
-  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users_kb' + subset_name)  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_total_users_kb' + suffix)  
 
 
 def run_search_ctr(analytics, start_dt, end_dt):
@@ -469,10 +480,14 @@ def run_search_ctr(analytics, start_dt, end_dt):
 
 def run_inproduct_vs_organic(analytics, start_dt, end_dt, subset_name=""):
 
-  if len(subset_name) > 0 and subset_name[0] != "_":
-    subset_name = "_" + subset_name
+  suffix = ""
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0}""") \
+                .format(dataset_name + ".ga_inproduct_vs_organic")
+  if len(subset_name) > 0:
+    qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} WHERE product=\"{1}\"""") \
+                   .format(dataset_name + ".ga_inproduct_vs_organic_by_product", subset_name)
+    suffix = "_by_product"
 
-  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_inproduct_vs_organic" + subset_name)
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
   max_date = max_date_result['max_date'].values[0]
@@ -480,10 +495,10 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt, subset_name=""):
   # if start_date < max_date, then start_date=max_date  
   if max_date and start_dt <= max_date: start_dt = max_date + timedelta(1)
   if max_date and end_dt<=max_date:
-    print( ("run_inproduct_vs_organic{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date, subset_name) )
+    print( ("run_inproduct_vs_organic_{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date, subset_name) )
     return
   if start_dt>=end_dt:
-    print( ("run_inproduct_vs_organic{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt, subset_name) )
+    print( ("run_inproduct_vs_organic_{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt, subset_name) )
     return
     
   print( start_dt)
@@ -495,6 +510,8 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt, subset_name=""):
   # write csv file to gs sumo folder for processing to BQ
   df = pd.DataFrame.from_records(add_response_to_results(response, results), columns=["ga_date","ga_segment","ga_users","ga_sessions"]) 
   df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
+  if subset_name != "":
+    df["product"] = subset_name
   df.to_csv("/tmp/" + fn, index=False)
 
   blob = sumo_bucket.blob("googleanalytics/" + fn)
@@ -502,15 +519,20 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt, subset_name=""):
   
   print('File {} uploaded to {}.'.format("/tmp/" + fn, "googleanalytics/" + fn))
 
-  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic' + subset_name)  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic' + suffix)  
 
 
 def run_kb_exit_rate(analytics, start_dt, end_dt, subset_name=""):
   
-  if len(subset_name) > 0 and subset_name[0] != "_":
-    subset_name = "_" + subset_name
+  suffix = ""
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0}""") \
+                .format(dataset_name + ".ga_kb_exit_rate")
+  if len(subset_name) > 0:
+    qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} WHERE product=\"{1}\"""") \
+                   .format(dataset_name + ".ga_kb_exit_rate_by_product", subset_name)
+    suffix = "_by_product"
 
-  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_kb_exit_rate" + subset_name)
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_kb_exit_rate" + suffix)
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
   max_date = max_date_result['max_date'].values[0]
@@ -518,10 +540,10 @@ def run_kb_exit_rate(analytics, start_dt, end_dt, subset_name=""):
   # if start_date < max_date, then start_date=max_date  
   if max_date and start_dt <= max_date: start_dt = max_date + timedelta(1)
   if max_date and end_dt<=max_date:
-    print( ("run_kb_exit_rate{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date,subset_name) )
+    print( ("run_kb_exit_rate_{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date,subset_name) )
     return
   if start_dt>=end_dt:
-    print( ("run_kb_exit_rate{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt,subset_name) )
+    print( ("run_kb_exit_rate_{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt,subset_name) )
     return
   
   fn = "ga_data_kb_exit_rate" + subset_name + "_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
@@ -537,12 +559,14 @@ def run_kb_exit_rate(analytics, start_dt, end_dt, subset_name=""):
     time.sleep(2) # google api restrictions
 
   df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
+  if subset_name != "":
+    df["product"] = subset_name
   df.to_csv("/tmp/" + fn, index=False)
   
   blob = sumo_bucket.blob("googleanalytics/" + fn)
   blob.upload_from_filename("/tmp/" + fn)
 
-  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_kb_exit_rate' + subset_name)  
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_kb_exit_rate' + suffix)  
 
 
 def run_questions_exit_rate(analytics, start_dt, end_dt):
@@ -619,6 +643,8 @@ def run_users_by_country(analytics, start_dt, end_dt):
 
 def update_bq_table(uri, fn, table_name):
 
+  # TODO: This operation is not idempotent. Running this job twice will load the
+  # data twice! (I guess the max_date thing guards against that a bit?)
   table_ref = dataset_ref.table(table_name)
   job_config = bigquery.LoadJobConfig()
   job_config.write_disposition = "WRITE_APPEND"
