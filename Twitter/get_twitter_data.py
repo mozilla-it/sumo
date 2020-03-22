@@ -28,6 +28,7 @@ def update_bq_table(uri, fn, table_name, table_schema):
   job_config.source_format = bigquery.SourceFormat.CSV
   job_config.skip_leading_rows = 1
   job_config.autodetect = False
+  job_config.max_bad_records = 5
   job_config.schema = table_schema
   
   orig_rows =  bq_client.get_table(table_ref).num_rows
