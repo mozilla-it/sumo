@@ -27,6 +27,17 @@ def create_ga_total_users_kb():
 
   assert table.table_id == 'ga_total_users_kb'
 
+def create_ga_total_users_kb_by_product():
+  schema = [
+    bigquery.SchemaField('ga_date', 'DATE', mode='NULLABLE'),
+    bigquery.SchemaField('ga_users', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('product', 'STRING', mode='NULLABLE')
+  ]
+  table_ref = dataset_ref.table('ga_total_users_kb_by_product')
+  table = bigquery.Table(table_ref, schema=schema)
+  table = client.create_table(table)  # API request
+
+  assert table.table_id == 'ga_total_users_kb_by_product'
 
 def create_ga_users_by_country():
   schema = [
@@ -54,6 +65,19 @@ def create_ga_inproduct_vs_organic():
 
   assert table.table_id == 'ga_inproduct_vs_organic'
 
+def create_ga_inproduct_vs_organic_by_product():
+  schema = [
+    bigquery.SchemaField('ga_date', 'DATE', mode='NULLABLE'),
+    bigquery.SchemaField('ga_segment', 'STRING', mode='NULLABLE'),
+    bigquery.SchemaField('ga_users', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('ga_sessions', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('product', 'STRING', mode='NULLABLE')
+  ]
+  table_ref = dataset_ref.table('ga_inproduct_vs_organic_by_product')
+  table = bigquery.Table(table_ref, schema=schema)
+  table = client.create_table(table)  # API request
+
+  assert table.table_id == 'ga_inproduct_vs_organic_by_product'
 
 def create_ga_kb_exit_rate():
   schema = [
@@ -68,6 +92,21 @@ def create_ga_kb_exit_rate():
   table = client.create_table(table)  # API request
 
   assert table.table_id == 'ga_kb_exit_rate'
+  
+def create_ga_kb_exit_rate_by_product():
+  schema = [
+    bigquery.SchemaField('ga_date', 'DATE', mode='NULLABLE'),
+    bigquery.SchemaField('ga_exitPagePath', 'STRING', mode='NULLABLE'),
+    bigquery.SchemaField('ga_exitRate', 'FLOAT', mode='NULLABLE'),
+    bigquery.SchemaField('ga_exits', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('ga_pageviews', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('product', 'STRING', mode='NULLABLE')
+  ]
+  table_ref = dataset_ref.table('ga_kb_exit_rate_by_product')
+  table = bigquery.Table(table_ref, schema=schema)
+  table = client.create_table(table)  # API request
+
+  assert table.table_id == 'ga_kb_exit_rate_by_product'
   
   
 def create_ga_questions_exit_rate():
@@ -101,8 +140,11 @@ def create_ga_search_ctr():
     
 def main():
   
+  create_ga_total_users_kb_by_product()
+  create_ga_inproduct_vs_organic_by_product()
+  create_ga_kb_exit_rate_by_product()
   #create_ga_total_users()
-  create_ga_total_users_kb()
+  #create_ga_total_users_kb()
   #create_ga_users_by_country()
   #create_ga_inproduct_vs_organic()
   #create_ga_kb_exit_rate()
