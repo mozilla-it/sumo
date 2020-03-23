@@ -737,22 +737,22 @@ def get_auth_user_data():
 def main():
 
     # these can all be formatted, uploaded and updated db in one shot
-#    get_forums_forum_data()
-#    get_forums_post_data()
-#    get_forums_thread_data()
-#    get_kbforums_post_data()
-#    get_kbforums_thread_data()
-#    get_wiki_document_products_data()
-#    get_wiki_document_topics_data()
-#    get_wiki_document_contributors_data()
-#    get_wiki_locale_data()
-#    get_products_product_data()
-#    
-#    # these are large files that will take a while to run
-#    get_wiki_document_data() # ndjsonified because of fields containing double quotes
-#    get_wiki_revision_data()
-#    get_auth_user_data()
-#    
+    get_forums_forum_data()
+    get_forums_post_data()
+    get_forums_thread_data()
+    get_kbforums_post_data()
+    get_kbforums_thread_data()
+    get_wiki_document_products_data()
+    get_wiki_document_topics_data()
+    get_wiki_document_contributors_data()
+    get_wiki_locale_data()
+    get_products_product_data()
+    
+    # these are large files that will take a while to run
+    get_wiki_document_data() # ndjsonified because of fields containing double quotes
+    get_wiki_revision_data()
+    get_auth_user_data()
+    
     # this take a mega long time to upload/run
     get_wiki_helpfulvote_data()
     # please check that mysql table rows match what's been loaded in bq esp for wiki_helpful vote
