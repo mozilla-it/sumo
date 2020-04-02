@@ -286,11 +286,16 @@ def update_bq_table_json(uri, fn, table_name, table_schema, write_disposition):
 
 def fetch_data(fn, query, fields, format_fn, upload):
     try:
-        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
-                                       database='kitsune',
-                                       user='root')
-                                       #user='root',
-                                       #password='Phantom22')
+        conn = mysql.connector.connect(host=os.environ.get("SUMO_MYSQL_HOST", "localhost"),
+                                       port=os.environ.get("SUMO_MYSQL_PORT",3306),
+                                       database=os.environ.get("SUMO_MYSQL_DB_NAME", "kitsune"),
+                                       user=os.environ.get("SUMO_MYSQL_USERNAME", "root"),
+                                       password=os.environ.get("SUMO_MYSQL_PASSWORD", ""))
+#        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
+#                                       database='kitsune',
+#                                       user='root')
+#                                       #user='root',
+#                                       #password='Phantom22')
         if conn.is_connected():
                 print('Connected to MySQL database')
     
@@ -329,10 +334,15 @@ def fetch_data(fn, query, fields, format_fn, upload):
 
 def fetch_data_json(fn, query, fields, format_fn, upload):
     try:
-        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
-                                       database='kitsune',
-                                       user='root')
-                                       #password='Phantom22')
+        conn = mysql.connector.connect(host=os.environ.get("SUMO_MYSQL_HOST", "localhost"),
+                                       port=os.environ.get("SUMO_MYSQL_PORT",3306),
+                                       database=os.environ.get("SUMO_MYSQL_DB_NAME", "kitsune"),
+                                       user=os.environ.get("SUMO_MYSQL_USERNAME", "root"),
+                                       password=os.environ.get("SUMO_MYSQL_PASSWORD", ""))
+#        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
+#                                       database='kitsune',
+#                                       user='root')
+#                                       #password='Phantom22')
         if conn.is_connected():
                 print('Connected to MySQL database')
     
