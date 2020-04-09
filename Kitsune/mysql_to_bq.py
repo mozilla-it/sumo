@@ -11,14 +11,6 @@ import pytz
 from datetime import datetime, timedelta
 from pytz import timezone
 
-from google.cloud import bigquery
-bq_client = bigquery.Client()
-dataset_name = 'sumo'
-dataset_ref = bq_client.dataset(dataset_name)
-
-from google.cloud import storage
-storage_client = storage.Client()
-sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
 
 # because Kitsune datetime fields are in PST whereas BQ stores everything in UTC
@@ -45,7 +37,7 @@ def create_tbl(schema, tbl_name):
 
 def safe_cast(val, to_type, default=None):
     try:
-        if val:
+        if type(val) != None:
            return to_type(val)
         else:
            return default
@@ -54,23 +46,23 @@ def safe_cast(val, to_type, default=None):
 
 
 def format_kb_votes(row):
-    assert len(row)==5, "Invalid row length, expecting length 5: " + row
+    assert len(row)==5, "Invalid row length, expecting length 5: " + str(row)
     return [ int(row[0]), str(row[1]), str(row[2]), convert_pst_to_utc(row[3]), int(row[4]) ]
 
 
 def format_forums_forum(row):
-    assert len(row)==7, "Invalid row length, expecting length 7: " + row
+    assert len(row)==7, "Invalid row length, expecting length 7: " + str(row)
     return [ int(row[0]), str(row[1]), str(row[2]), str(row[3]), int(row[4]), int(row[5]), int(row[6]) ]
 
 
 def format_forums_post(row):
-    assert len(row)==7, "Invalid row length, expecting length 7: " + row
+    assert len(row)==7, "Invalid row length, expecting length 7: " + str(row)
     #print(safe_cast(row[2],str,''))
     #print(safe_cast(row[2],str,'').replace("\n" , "\\n").replace("\r" , "\\n").replace("\r\n" , "\\n"))
     return [ safe_cast(row[0],int,None), safe_cast(row[1],int,None), safe_cast(row[2],str,'').replace("\n" , "\\n").replace("\r" , "\\n").replace("\r\n" , "\\n"), safe_cast(row[3],int,None), convert_pst_to_utc(row[4]), convert_pst_to_utc(row[5]), safe_cast(row[6],int,None) ]
 
 def format_forums_thread(row):
-    assert len(row)==9, "Invalid row length, expecting length 9: " + row
+    assert len(row)==9, "Invalid row length, expecting length 9: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],str,''), 
              safe_cast(row[2],int,None), 
@@ -83,7 +75,7 @@ def format_forums_thread(row):
 
 
 def format_customercare_reply(row):
-    assert len(row)==8, "Invalid row length, expecting length 8: " + row
+    assert len(row)==8, "Invalid row length, expecting length 8: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],int,None), 
              safe_cast(row[2],str,''), 
@@ -95,7 +87,7 @@ def format_customercare_reply(row):
 
 
 def format_customercare_tweet(row):
-    assert len(row)==6, "Invalid row length, expecting length 6: " + row
+    assert len(row)==6, "Invalid row length, expecting length 6: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],str,''), 
              safe_cast(row[2],str,''), 
@@ -105,7 +97,7 @@ def format_customercare_tweet(row):
 
 
 def format_users_profile(row):
-    assert len(row)==8, "Invalid row length, expecting length 8: " + row
+    assert len(row)==8, "Invalid row length, expecting length 8: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],str,''), 
              safe_cast(row[2],str,''), 
@@ -117,27 +109,27 @@ def format_users_profile(row):
 
 
 def format_wiki_document_products(row):
-    assert len(row)==3, "Invalid row length, expecting length 3: " + row
+    assert len(row)==3, "Invalid row length, expecting length 3: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],int,None), 
              safe_cast(row[2],int,None)]
 
 
 def format_wiki_document_topics(row):
-    assert len(row)==3, "Invalid row length, expecting length 3: " + row
+    assert len(row)==3, "Invalid row length, expecting length 3: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],int,None), 
              safe_cast(row[2],int,None)]
 
 
 def format_wiki_locale(row):
-    assert len(row)==2, "Invalid row length, expecting length 2: " + row
+    assert len(row)==2, "Invalid row length, expecting length 2: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],str,"")]
              
 
 def format_wiki_document(row):
-    assert len(row)==17, "Invalid row length, expecting length 17: " + row
+    assert len(row)==17, "Invalid row length, expecting length 17: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],str,""),
              safe_cast(row[2],str,""),
@@ -159,14 +151,14 @@ def format_wiki_document(row):
              
 
 def format_wiki_document_contributors(row):
-    assert len(row)==3, "Invalid row length, expecting length 3: " + row
+    assert len(row)==3, "Invalid row length, expecting length 3: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],int,None),
              safe_cast(row[2],int,None)]
 
 
 def format_wiki_revision(row):
-    assert len(row)==17, "Invalid row length, expecting length 17: " + row
+    assert len(row)==17, "Invalid row length, expecting length 17: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],int,None),
              safe_cast(row[2],str,"").replace("\n" , "\\n").replace("\r" , "\\n").replace("\r\n" , "\\n"),
@@ -188,7 +180,7 @@ def format_wiki_revision(row):
 
 
 def format_auth_user(row):
-    assert len(row)==10, "Invalid row length, expecting length 10: " + row
+    assert len(row)==10, "Invalid row length, expecting length 10: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],str,""),
              safe_cast(row[2],str,""),
@@ -203,7 +195,7 @@ def format_auth_user(row):
 
 
 def format_products_product(row):
-    assert len(row)==12, "Invalid row length, expecting length 12: " + row
+    assert len(row)==12, "Invalid row length, expecting length 12: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],str,""),
              safe_cast(row[2],str,""),
@@ -220,7 +212,7 @@ def format_products_product(row):
 
 
 def format_wiki_helpfulvote(row):
-    assert len(row)==7, "Invalid row length, expecting length 7: " + row
+    assert len(row)==7, "Invalid row length, expecting length 7: " + str(row)
     return [ safe_cast(row[0],int,None), 
              safe_cast(row[1],int,None),
              safe_cast(row[2],bool,None),
@@ -286,11 +278,16 @@ def update_bq_table_json(uri, fn, table_name, table_schema, write_disposition):
 
 def fetch_data(fn, query, fields, format_fn, upload):
     try:
-        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
-                                       database='kitsune',
-                                       user='root')
-                                       #user='root',
-                                       #password='Phantom22')
+        conn = mysql.connector.connect(host=os.environ.get("SUMO_MYSQL_HOST", "localhost"),
+                                       port=os.environ.get("SUMO_MYSQL_PORT",3306),
+                                       database=os.environ.get("SUMO_MYSQL_DB_NAME", "kitsune"),
+                                       user=os.environ.get("SUMO_MYSQL_USERNAME", "root"),
+                                       password=os.environ.get("SUMO_MYSQL_PASSWORD", ""))
+#        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
+#                                       database='kitsune',
+#                                       user='root')
+#                                       #user='root',
+#                                       #password='Phantom22')
         if conn.is_connected():
                 print('Connected to MySQL database')
     
@@ -329,10 +326,15 @@ def fetch_data(fn, query, fields, format_fn, upload):
 
 def fetch_data_json(fn, query, fields, format_fn, upload):
     try:
-        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
-                                       database='kitsune',
-                                       user='root')
-                                       #password='Phantom22')
+        conn = mysql.connector.connect(host=os.environ.get("SUMO_MYSQL_HOST", "localhost"),
+                                       port=os.environ.get("SUMO_MYSQL_PORT",3306),
+                                       database=os.environ.get("SUMO_MYSQL_DB_NAME", "kitsune"),
+                                       user=os.environ.get("SUMO_MYSQL_USERNAME", "root"),
+                                       password=os.environ.get("SUMO_MYSQL_PASSWORD", ""))
+#        conn = mysql.connector.connect(host='127.0.0.1', port=3306,
+#                                       database='kitsune',
+#                                       user='root')
+#                                       #password='Phantom22')
         if conn.is_connected():
                 print('Connected to MySQL database')
     
@@ -764,4 +766,13 @@ def main():
     #get_users_profile() # not needed
 
 if __name__ == '__main__':
-     main()
+    from google.cloud import bigquery
+    bq_client = bigquery.Client()
+    dataset_name = 'sumo'
+    dataset_ref = bq_client.dataset(dataset_name)
+    
+    from google.cloud import storage
+    storage_client = storage.Client()
+    sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
+
+    main()

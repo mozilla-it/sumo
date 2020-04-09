@@ -1,7 +1,3 @@
-#from google.oauth2.service_account import Credentials
-from oauth2client.service_account import ServiceAccountCredentials
-#from oauth2client.client import GoogleCredentials
-from googleapiclient.discovery import build
 
 import argparse
 import pandas as pd
@@ -10,16 +6,6 @@ from datetime import datetime, timedelta, date, timedelta
 import time
 import os
 
-from google.cloud import bigquery
-bq_client = bigquery.Client()
-dataset_name = 'sumo'
-dataset_ref = bq_client.dataset(dataset_name)
-
-from google.cloud import storage
-storage_client = storage.Client()
-
-bucket = os.environ.get('BUCKET','moz-it-data-sumo')
-sumo_bucket = storage_client.get_bucket(bucket)
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 KEY_FILE_LOCATION = '/opt/secrets/secret.json'
@@ -700,14 +686,30 @@ def main(start_date=None, end_date=None):
   run_search_ctr(analytics, start_date, end_date)
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description="SUMO Google Analytics main arguments")
-  #parser.add_argument('-s', "--startdate", help="Inclusive Start Date - format YYYY-MM-DD ", required=False)
-  #parser.add_argument('-e', "--enddate", help="Exclusive End Date format YYYY-MM-DD", required=False)
-  #args = parser.parse_args()
-  
-  #hmmm no dedupe process
-  # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
-  start_date = date(2020, 1, 1) # inclusive
-  end_date = datetime.today().date() - timedelta(days=2) # exclusive
-  
-  main(start_date, end_date)
+    #from google.oauth2.service_account import Credentials
+    from oauth2client.service_account import ServiceAccountCredentials
+    #from oauth2client.client import GoogleCredentials
+    from googleapiclient.discovery import build
+
+    from google.cloud import bigquery
+    bq_client = bigquery.Client()
+    dataset_name = 'sumo'
+    dataset_ref = bq_client.dataset(dataset_name)
+    
+    from google.cloud import storage
+    storage_client = storage.Client()
+    
+    bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+    sumo_bucket = storage_client.get_bucket(bucket)
+
+    parser = argparse.ArgumentParser(description="SUMO Google Analytics main arguments")
+    #parser.add_argument('-s', "--startdate", help="Inclusive Start Date - format YYYY-MM-DD ", required=False)
+    #parser.add_argument('-e', "--enddate", help="Exclusive End Date format YYYY-MM-DD", required=False)
+    #args = parser.parse_args()
+    
+    #hmmm no dedupe process
+    # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
+    start_date = date(2020, 1, 1) # inclusive
+    end_date = datetime.today().date() - timedelta(days=2) # exclusive
+    
+    main(start_date, end_date)

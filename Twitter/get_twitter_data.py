@@ -6,20 +6,6 @@ import pandas as pd
 import csv
 import os
 
-from google.cloud import bigquery
-bq_client = bigquery.Client()
-dataset_name = 'sumo'
-dataset_ref = bq_client.dataset(dataset_name)
-
-from google.cloud import storage
-storage_client = storage.Client()
-
-consumer_key = os.environ['SUMO_TWITTER_CONSUMER_KEY'] 
-consumer_secret = os.environ['SUMO_TWITTER_CONSUMER_SECRET'] 
-bucket = os.environ.get('BUCKET','moz-it-data-sumo')
-
-sumo_bucket = storage_client.get_bucket(bucket)
-
 def update_bq_table(uri, fn, table_name, table_schema):
 
   table_ref = dataset_ref.table(table_name)
@@ -220,20 +206,34 @@ def get_firefox_reviews(api):
 
 def main():
 
-  # OAuth process, using the keys and tokens
-  #auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-  auth = tweepy.AppAuthHandler(consumer_key, consumer_secret) # appplication handler has higher limits
-  #auth.set_access_token(access_token, access_token_secret)
+    # OAuth process, using the keys and tokens
+    #auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth = tweepy.AppAuthHandler(consumer_key, consumer_secret) # appplication handler has higher limits
+    #auth.set_access_token(access_token, access_token_secret)
+    
+    # Creation of the actual interface, using authentication
+    api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+    if (not api):
+        print ("Can't Authenticate")
+        sys.exit(-1)
 
-  # Creation of the actual interface, using authentication
-  api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-  if (not api):
-    print ("Can't Authenticate")
-    sys.exit(-1)
-
-  get_firefox_reviews(api)
-  get_firefox_mentions(api)
+    get_firefox_reviews(api)
+    get_firefox_mentions(api)
   
   
 if __name__ == '__main__':
-	main()
+    from google.cloud import bigquery
+    bq_client = bigquery.Client()
+    dataset_name = 'sumo'
+    dataset_ref = bq_client.dataset(dataset_name)
+    
+    from google.cloud import storage
+    storage_client = storage.Client()
+    
+    consumer_key = os.environ['SUMO_TWITTER_CONSUMER_KEY'] 
+    consumer_secret = os.environ['SUMO_TWITTER_CONSUMER_SECRET'] 
+    bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+    
+    sumo_bucket = storage_client.get_bucket(bucket)
+
+    main()
