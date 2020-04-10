@@ -6,6 +6,21 @@ from datetime import datetime, timedelta, date, timedelta
 import time
 import os
 
+#from google.oauth2.service_account import Credentials
+from oauth2client.service_account import ServiceAccountCredentials
+#from oauth2client.client import GoogleCredentials
+from googleapiclient.discovery import build
+
+from google.cloud import bigquery
+bq_client = bigquery.Client()
+dataset_name = 'sumo'
+dataset_ref = bq_client.dataset(dataset_name)
+
+from google.cloud import storage
+storage_client = storage.Client()
+
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+sumo_bucket = storage_client.get_bucket(bucket)
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 KEY_FILE_LOCATION = '/opt/secrets/secret.json'
@@ -654,53 +669,39 @@ def update_bq_table(uri, fn, table_name):
 
     
 def main(start_date=None, end_date=None):
-  #start_date = date(2019, 4, 1) # inclusive
-  #end_date = date(2019, 5, 1) # exclusive
 
-  if start_date is None:
-    start_date = date(2020, 1, 1) # inclusive
-    end_date = datetime.today().date() # exclusive
+    #start_date = date(2019, 4, 1) # inclusive
+    #end_date = date(2019, 5, 1) # exclusive
+    
+    if start_date is None:
+        start_date = date(2020, 1, 1) # inclusive
+        end_date = datetime.today().date() # exclusive
 
-  analytics = initialize_analyticsreporting()
+    analytics = initialize_analyticsreporting()
   
-  # construct filename from either start/end date vars or from BQ
+    # construct filename from either start/end date vars or from BQ
   
-  run_total_users(analytics, start_date, end_date)
+    run_total_users(analytics, start_date, end_date)
   
-  run_total_users_kb(analytics, start_date, end_date)
+    run_total_users_kb(analytics, start_date, end_date)
 
-  run_total_users_kb(analytics, start_date, end_date, "fenix")
+    run_total_users_kb(analytics, start_date, end_date, "fenix")
   
-  run_users_by_country(analytics, start_date, end_date)
+    run_users_by_country(analytics, start_date, end_date)
   
-  run_inproduct_vs_organic(analytics, start_date, end_date)
+    run_inproduct_vs_organic(analytics, start_date, end_date)
 
-  run_inproduct_vs_organic(analytics, start_date, end_date, "fenix")
+    run_inproduct_vs_organic(analytics, start_date, end_date, "fenix")
 
-  run_kb_exit_rate(analytics, start_date, end_date)
+    run_kb_exit_rate(analytics, start_date, end_date)
 
-  run_kb_exit_rate(analytics, start_date, end_date, "fenix")
+    run_kb_exit_rate(analytics, start_date, end_date, "fenix")
 
-  run_questions_exit_rate(analytics, start_date, end_date)
+    run_questions_exit_rate(analytics, start_date, end_date)
 
-  run_search_ctr(analytics, start_date, end_date)
+    run_search_ctr(analytics, start_date, end_date)
 
 if __name__ == '__main__':
-    #from google.oauth2.service_account import Credentials
-    from oauth2client.service_account import ServiceAccountCredentials
-    #from oauth2client.client import GoogleCredentials
-    from googleapiclient.discovery import build
-
-    from google.cloud import bigquery
-    bq_client = bigquery.Client()
-    dataset_name = 'sumo'
-    dataset_ref = bq_client.dataset(dataset_name)
-    
-    from google.cloud import storage
-    storage_client = storage.Client()
-    
-    bucket = os.environ.get('BUCKET','moz-it-data-sumo')
-    sumo_bucket = storage_client.get_bucket(bucket)
 
     parser = argparse.ArgumentParser(description="SUMO Google Analytics main arguments")
     #parser.add_argument('-s', "--startdate", help="Inclusive Start Date - format YYYY-MM-DD ", required=False)
