@@ -6,6 +6,20 @@ import pandas as pd
 import csv
 import os
 
+from google.cloud import bigquery
+bq_client = bigquery.Client()
+dataset_name = 'sumo'
+dataset_ref = bq_client.dataset(dataset_name)
+
+from google.cloud import storage
+storage_client = storage.Client()
+
+consumer_key = os.environ['SUMO_TWITTER_CONSUMER_KEY'] 
+consumer_secret = os.environ['SUMO_TWITTER_CONSUMER_SECRET'] 
+bucket = os.environ.get('BUCKET','moz-it-data-sumo')
+
+sumo_bucket = storage_client.get_bucket(bucket)
+
 def update_bq_table(uri, fn, table_name, table_schema):
 
   table_ref = dataset_ref.table(table_name)
@@ -222,18 +236,4 @@ def main():
   
   
 if __name__ == '__main__':
-    from google.cloud import bigquery
-    bq_client = bigquery.Client()
-    dataset_name = 'sumo'
-    dataset_ref = bq_client.dataset(dataset_name)
-    
-    from google.cloud import storage
-    storage_client = storage.Client()
-    
-    consumer_key = os.environ['SUMO_TWITTER_CONSUMER_KEY'] 
-    consumer_secret = os.environ['SUMO_TWITTER_CONSUMER_SECRET'] 
-    bucket = os.environ.get('BUCKET','moz-it-data-sumo')
-    
-    sumo_bucket = storage_client.get_bucket(bucket)
-
     main()
