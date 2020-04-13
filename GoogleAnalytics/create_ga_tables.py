@@ -79,6 +79,22 @@ def create_ga_inproduct_vs_organic_by_product():
 
   assert table.table_id == 'ga_inproduct_vs_organic_by_product'
 
+def create_ga_inproduct_vs_organic_by_page():
+  schema = [
+    bigquery.SchemaField('ga_date', 'DATE', mode='NULLABLE'),
+    bigquery.SchemaField('ga_page_path', 'STRING', mode='NULLABLE'),
+    bigquery.SchemaField('ga_segment', 'STRING', mode='NULLABLE'),
+    bigquery.SchemaField('ga_pageviews', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('ga_users', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('ga_sessions', 'INTEGER', mode='NULLABLE'),
+    bigquery.SchemaField('product', 'STRING', mode='NULLABLE')
+  ]
+  table_ref = dataset_ref.table('ga_inproduct_vs_organic_by_page')
+  table = bigquery.Table(table_ref, schema=schema)
+  table = client.create_table(table)  # API request
+
+  assert table.table_id == 'ga_inproduct_vs_organic_by_page'
+
 def create_ga_kb_exit_rate():
   schema = [
     bigquery.SchemaField('ga_date', 'DATE', mode='NULLABLE'),
@@ -140,9 +156,10 @@ def create_ga_search_ctr():
     
 def main():
   
-  create_ga_total_users_kb_by_product()
-  create_ga_inproduct_vs_organic_by_product()
-  create_ga_kb_exit_rate_by_product()
+  #create_ga_total_users_kb_by_product()
+  #create_ga_inproduct_vs_organic_by_product()
+  create_ga_inproduct_vs_organic_by_page()
+  #create_ga_kb_exit_rate_by_product()
   #create_ga_total_users()
   #create_ga_total_users_kb()
   #create_ga_users_by_country()

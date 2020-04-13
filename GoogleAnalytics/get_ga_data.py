@@ -200,6 +200,67 @@ def get_inproduct_vs_organic(analytics, startDate, endDate, subset_name):
 #dim {'name': 'ga:source'}, medium, ga:sourceMedium, ga:channelGrouping
 #inproduct
 
+def get_inproduct_vs_organic_by_page(analytics, startDate, endDate, subset_name):
+  """Queries the Analytics Reporting API V4.
+  """
+
+  segments = [{ "dynamicSegment": {
+                  "name":"In-product",
+                  "sessionSegment": {
+                      "segmentFilters":[{
+                          "simpleSegment": {
+                              "orFiltersForSegment":[{
+                                  "segmentFilterClauses":[{
+                                      "dimensionFilter": {
+                                          "dimensionName":"ga:source",
+                                          "expressions":["inproduct"],
+                                          "operator":"EXACT"
+                                      }
+                                  }]
+                              }]
+                          }
+                      }]
+                  }
+                }
+              },{
+                "dynamicSegment": {
+                  "name":"Organic",
+                  "sessionSegment": {
+                      "segmentFilters":[{
+                          "simpleSegment": {
+                              "orFiltersForSegment":[{
+                                  "segmentFilterClauses":[{
+                                      "dimensionFilter": {
+                                          "dimensionName":"ga:medium",
+                                          "expressions":["organic"],
+                                          "operator":"EXACT"
+                                      }
+                                  }]
+                              }]
+                          }
+                      }]
+                  }
+                }
+              }]
+
+  dimension_filter_clauses = []
+  if subset_name == "fenix":
+    dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
+
+  return analytics.reports().batchGet(
+      body={
+        'reportRequests': [{
+          'viewId': VIEW_ID,
+          'dateRanges': [{'startDate': startDate, 'endDate': endDate}],
+          #'metrics': [{'expression': 'ga:users'}, {'expression': 'ga:sessions'}],
+          'metrics': [{'expression': 'ga:pageviews'}, {'expression': 'ga:users'}, {'expression': 'ga:sessions'}],
+          "orderBys": [{ "fieldName": 'ga:pageviews', "sortOrder": 'DESCENDING' }],
+          #'dimensions': [{'name': 'ga:date'}, {'name': 'ga:segment'}],
+          'dimensions': [{'name': 'ga:date'}, {'name': 'ga:pagePath'}, {'name': 'ga:segment'}],
+          "dimensionFilterClauses": dimension_filter_clauses,
+          "segments": segments,
+        }]
+    }).execute() 
 
 def get_search_ctr_users(analytics, startDate, endDate):
   """Queries the Analytics Reporting API V4.
@@ -522,6 +583,51 @@ def run_inproduct_vs_organic(analytics, start_dt, end_dt, subset_name=""):
 
   update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic' + suffix)  
 
+def run_inproduct_vs_organic_by_page(analytics, start_dt, end_dt, subset_name=""):
+
+  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} WHERE product=\"{1}\"""") \
+                   .format(dataset_name + ".ga_inproduct_vs_organic_by_page", subset_name)
+
+  query_job = bq_client.query(qry_max_date)
+  max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
+  max_date = max_date_result['max_date'].values[0]
+
+  # if start_date < max_date, then start_date=max_date  
+  if max_date and start_dt <= max_date: start_dt = max_date + timedelta(1)
+  if max_date and end_dt<=max_date:
+    print( ("run_inproduct_vs_organic_by_page_{2}: End Date {0} <= Max Date {1}, no update needed.").format(end_dt,max_date, subset_name) )
+    return
+  if start_dt>=end_dt:
+    print( ("run_inproduct_vs_organic_by_page_{2}: Start Date {0} >= End Date {1}, no update needed.").format(start_dt, end_dt, subset_name) )
+    return
+    
+  print( start_dt)
+  
+  fn = "ga_data_inproduct_vs_organic_by_page" + subset_name + "_" + start_dt.strftime("%Y%m%d") + "_to_" + (end_dt - timedelta(days=1)).strftime("%Y%m%d") + ".csv"
+
+  response = get_inproduct_vs_organic_by_page(
+                    analytics,
+                    start_dt.strftime("%Y-%m-%d"), 
+                    end_dt.strftime("%Y-%m-%d"), 
+                    subset_name)
+  results = []
+
+  # write csv file to gs sumo folder for processing to BQ
+  df = pd.DataFrame.from_records(
+            add_response_to_results(response, results),
+            #columns=["ga_date","ga_segment","ga_users","ga_sessions"]) 
+            columns=["ga_date","ga_page_path","ga_segment","ga_pageviews","ga_users","ga_sessions"]) 
+  df['ga_date'] = pd.to_datetime(df['ga_date'], format="%Y%m%d").dt.strftime("%Y-%m-%d")
+  if subset_name != "":
+    df["product"] = subset_name
+  df.to_csv("/tmp/" + fn, index=False)
+
+  blob = sumo_bucket.blob("googleanalytics/" + fn)
+  blob.upload_from_filename("/tmp/" + fn)
+  
+  print('File {} uploaded to {}.'.format("/tmp/" + fn, "googleanalytics/" + fn))
+
+  update_bq_table("gs://{}/googleanalytics/".format(bucket), fn, 'ga_inproduct_vs_organic_by_page')  
 
 def run_kb_exit_rate(analytics, start_dt, end_dt, subset_name=""):
   
@@ -674,7 +780,7 @@ def main(start_date=None, end_date=None):
     #end_date = date(2019, 5, 1) # exclusive
     
     if start_date is None:
-        start_date = date(2020, 1, 1) # inclusive
+        start_date = date(2020, 4, 12) # inclusive
         end_date = datetime.today().date() # exclusive
 
     analytics = initialize_analyticsreporting()
@@ -693,6 +799,8 @@ def main(start_date=None, end_date=None):
 
     run_inproduct_vs_organic(analytics, start_date, end_date, "fenix")
 
+    run_inproduct_vs_organic_by_page(analytics, start_date, end_date, "fenix")
+
     run_kb_exit_rate(analytics, start_date, end_date)
 
     run_kb_exit_rate(analytics, start_date, end_date, "fenix")
@@ -710,7 +818,7 @@ if __name__ == '__main__':
     
     #hmmm no dedupe process
     # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
-    start_date = date(2020, 1, 1) # inclusive
+    start_date = date(2020, 4, 10) # inclusive
     end_date = datetime.today().date() - timedelta(days=2) # exclusive
     
     main(start_date, end_date)
