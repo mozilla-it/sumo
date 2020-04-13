@@ -787,27 +787,27 @@ def main(start_date=None, end_date=None):
   
     # construct filename from either start/end date vars or from BQ
   
-#    run_total_users(analytics, start_date, end_date)
-#  
-#    run_total_users_kb(analytics, start_date, end_date)
-#
-#    run_total_users_kb(analytics, start_date, end_date, "fenix")
-#  
-#    run_users_by_country(analytics, start_date, end_date)
-#  
-#    run_inproduct_vs_organic(analytics, start_date, end_date)
-#
-#    run_inproduct_vs_organic(analytics, start_date, end_date, "fenix")
-#
+    run_total_users(analytics, start_date, end_date)
+  
+    run_total_users_kb(analytics, start_date, end_date)
+
+    run_total_users_kb(analytics, start_date, end_date, "fenix")
+  
+    run_users_by_country(analytics, start_date, end_date)
+  
+    run_inproduct_vs_organic(analytics, start_date, end_date)
+
+    run_inproduct_vs_organic(analytics, start_date, end_date, "fenix")
+
     run_inproduct_vs_organic_by_page(analytics, start_date, end_date, "fenix")
-#
-#    run_kb_exit_rate(analytics, start_date, end_date)
-#
-#    run_kb_exit_rate(analytics, start_date, end_date, "fenix")
-#
-#    run_questions_exit_rate(analytics, start_date, end_date)
-#
-#    run_search_ctr(analytics, start_date, end_date)
+
+    run_kb_exit_rate(analytics, start_date, end_date)
+
+    run_kb_exit_rate(analytics, start_date, end_date, "fenix")
+
+    run_questions_exit_rate(analytics, start_date, end_date)
+
+    run_search_ctr(analytics, start_date, end_date)
 
 if __name__ == '__main__':
 
