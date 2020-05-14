@@ -141,6 +141,8 @@ def get_total_users_kb(analytics, startDate, endDate, subset_name):
   dimension_filter_clauses = [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:pagePath", "expressions": ["/kb"]} ] }]
   if subset_name == "fenix":
     dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
+  elif subset_name == "desktop":
+    dimension_filter_clauses = get_dimension_filter_clauses_desktop("ga:pagePath")
 
   return analytics.reports().batchGet(
       body={
@@ -201,6 +203,8 @@ def get_inproduct_vs_organic(analytics, startDate, endDate, subset_name):
   dimension_filter_clauses = []
   if subset_name == "fenix":
     dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
+  elif subset_name == "desktop":
+    dimension_filter_clauses = get_dimension_filter_clauses_desktop("ga:pagePath")
 
   return analytics.reports().batchGet(
       body={
@@ -357,6 +361,8 @@ def get_kb_exit_rate(analytics, startDate, endDate, subset_name):
   dimension_filter_clauses = [{"filters": [ {"operator": "PARTIAL", "dimensionName": "ga:exitPagePath", "expressions": ["/kb"]} ] }]
   if subset_name == "fenix":
     dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:exitPagePath")
+  elif subset_name == "desktop":
+    dimension_filter_clauses = get_dimension_filter_clauses_desktop("ga:exitPagePath")
 
   return analytics.reports().batchGet(
       body={
@@ -811,12 +817,16 @@ def main(start_date=None, end_date=None):
     run_total_users_kb(analytics, start_date, end_date)
 
     run_total_users_kb(analytics, start_date, end_date, "fenix")
+
+    run_total_users_kb(analytics, start_date, end_date, "desktop")
   
     run_users_by_country(analytics, start_date, end_date)
   
     run_inproduct_vs_organic(analytics, start_date, end_date)
 
     run_inproduct_vs_organic(analytics, start_date, end_date, "fenix")
+
+    run_inproduct_vs_organic(analytics, start_date, end_date, "desktop")
 
     run_inproduct_vs_organic_by_page(analytics, start_date, end_date, "fenix")
 
@@ -825,6 +835,8 @@ def main(start_date=None, end_date=None):
     run_kb_exit_rate(analytics, start_date, end_date)
 
     run_kb_exit_rate(analytics, start_date, end_date, "fenix")
+
+    run_kb_exit_rate(analytics, start_date, end_date, "desktop")
 
     run_questions_exit_rate(analytics, start_date, end_date)
 
