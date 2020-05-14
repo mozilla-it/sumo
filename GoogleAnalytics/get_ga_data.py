@@ -5,6 +5,7 @@ import csv
 from datetime import datetime, timedelta, date, timedelta
 import time
 import os
+import re
 
 #from google.oauth2.service_account import Credentials
 from oauth2client.service_account import ServiceAccountCredentials
@@ -31,6 +32,22 @@ def daterange(start_date, end_date):
   for n in range(int ((end_date - start_date).days)):
     yield start_date + timedelta(n)
 
+
+def get_dimension_filter_clauses_desktop(dim_name):
+    clauses = []
+    dict_skeleton = {
+        "operator": "EXACT",
+        "dimensionName": dim_name,
+    }
+    with open("desktop_urls.txt") as f:
+        for line in f:
+            nodomain = re.sub("^https://support.mozilla.org", "", line.rstrip())
+            dict_skeleton["expressions"] = [nodomain]
+            clauses.append(dict_skeleton.copy())
+
+    return(
+        [{"filters": clauses}]
+    )
 
 def get_dimension_filter_clauses_fenix(dim_name):
     return([
@@ -246,6 +263,8 @@ def get_inproduct_vs_organic_by_page(analytics, startDate, endDate, subset_name)
   dimension_filter_clauses = []
   if subset_name == "fenix":
     dimension_filter_clauses = get_dimension_filter_clauses_fenix("ga:pagePath")
+  elif subset_name == "desktop":
+    dimension_filter_clauses = get_dimension_filter_clauses_desktop("ga:pagePath")
 
   return analytics.reports().batchGet(
       body={
@@ -801,6 +820,8 @@ def main(start_date=None, end_date=None):
 
     run_inproduct_vs_organic_by_page(analytics, start_date, end_date, "fenix")
 
+    run_inproduct_vs_organic_by_page(analytics, start_date, end_date, "desktop")
+
     run_kb_exit_rate(analytics, start_date, end_date)
 
     run_kb_exit_rate(analytics, start_date, end_date, "fenix")
@@ -818,7 +839,7 @@ if __name__ == '__main__':
     
     #hmmm no dedupe process
     # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
-    start_date = date(2020, 4, 10) # inclusive
+    start_date = date(2020, 5, 10) # inclusive
     end_date = datetime.today().date() - timedelta(days=2) # exclusive
     
     main(start_date, end_date)
