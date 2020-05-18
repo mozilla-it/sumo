@@ -52,22 +52,6 @@ def get_dimension_filter_clauses_desktop(dim_name):
         [{"filters": clauses}]
     )
 
-def get_dimension_filter_clauses_desktop(dim_name):
-    clauses = []
-    dict_skeleton = {
-        "operator": "EXACT",
-        "dimensionName": dim_name,
-    }
-    with open("desktop_urls.txt") as f:
-        for line in f:
-            nodomain = re.sub("^https://support.mozilla.org", "", line.rstrip())
-            dict_skeleton["expressions"] = [nodomain]
-            clauses.append(dict_skeleton.copy())
-
-    return(
-        [{"filters": clauses}]
-    )
-
 def get_dimension_filter_clauses_fenix(dim_name):
     return([
       {"filters":
