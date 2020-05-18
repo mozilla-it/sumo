@@ -32,6 +32,8 @@ def daterange(start_date, end_date):
   for n in range(int ((end_date - start_date).days)):
     yield start_date + timedelta(n)
 
+def get_lib_path():
+    return os.path.dirname(os.path.realpath(__file__))
 
 def get_dimension_filter_clauses_desktop(dim_name):
     clauses = []
@@ -39,7 +41,8 @@ def get_dimension_filter_clauses_desktop(dim_name):
         "operator": "EXACT",
         "dimensionName": dim_name,
     }
-    with open("desktop_urls.txt") as f:
+    urls_fullpath = os.path.join(get_lib_path(),"desktop_urls.txt")
+    with open(urls_fullpath) as f:
         for line in f:
             nodomain = re.sub("^https://support.mozilla.org", "", line.rstrip())
             dict_skeleton["expressions"] = [nodomain]
