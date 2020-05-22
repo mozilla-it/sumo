@@ -42,7 +42,7 @@ def update_bq_table(uri, dataset_name, table_name):
   job_config.write_disposition = "WRITE_APPEND"
   job_config.source_format = bigquery.SourceFormat.CSV
   job_config.skip_leading_rows = 1
-  job_config.autodetect = True
+  #job_config.autodetect = True
 
   load_job = bq_client.load_table_from_uri(uri, table_ref, job_config=job_config)  # API request
   print("Starting job {}".format(load_job.job_id))
