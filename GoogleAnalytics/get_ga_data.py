@@ -667,7 +667,7 @@ def run_kb_exit_rate(analytics, start_dt, end_dt, subset_name=""):
                    .format(dataset_name + ".ga_kb_exit_rate_by_product", subset_name)
     suffix = "_by_product"
 
-  qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_kb_exit_rate" + suffix)
+  #qry_max_date = ("""SELECT max(ga_date) max_date FROM {0} """).format(dataset_name + ".ga_kb_exit_rate" + suffix)
   query_job = bq_client.query(qry_max_date)
   max_date_result = query_job.to_dataframe() # no need to go through query_job.result()
   max_date = max_date_result['max_date'].values[0]
@@ -854,7 +854,7 @@ if __name__ == '__main__':
     
     #hmmm no dedupe process
     # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
-    start_date = date(2020, 5, 10) # inclusive
+    start_date = date(2020, 3, 16) # inclusive
     end_date = datetime.today().date() - timedelta(days=2) # exclusive
     
     main(start_date, end_date)
