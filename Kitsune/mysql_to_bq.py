@@ -767,12 +767,12 @@ def main():
 
 if __name__ == '__main__':
     from google.cloud import bigquery
-    bq_client = bigquery.Client()
+    bq_client = bigquery.Client(project="imposing-union-227917")
     dataset_name = 'sumo'
     dataset_ref = bq_client.dataset(dataset_name)
     
     from google.cloud import storage
-    storage_client = storage.Client()
+    storage_client = storage.Client(project="imposing-union-227917")
     sumo_bucket = storage_client.get_bucket('moz-it-data-sumo')
 
     main()
