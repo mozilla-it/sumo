@@ -398,3 +398,6 @@
 /en-US/kb/send-tab
 /en-US/kb/compatibility-exploit-protection-windows-10
 /en-US/kb/xframe-neterror-page
+/en-US/kb/run-firefox-chromeos
+/en-US/kb/macos-users-esr
+/en-US/kb/changes-tab-context-menu-firefox-78
