@@ -16,7 +16,7 @@ setup(name='sumo',
       author_email='nawong@mozilla.com',
       license='...',
       packages=['SurveyGizmo','ReleaseCalendar','ReleaseCalendar','Kitsune','GoogleAnalytics','Twitter','Product_Insights'],
-      package_data={"GoogleAnalytics": ["desktop_urls.txt"]},
+      package_data={"GoogleAnalytics": ["urls_*.txt"]},
       install_requires=[
           'requests',
           'six<2.0.0dev,>=1.13.0',
