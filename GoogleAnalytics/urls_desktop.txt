@@ -401,3 +401,5 @@
 /en-US/kb/run-firefox-chromeos
 /en-US/kb/macos-users-esr
 /en-US/kb/changes-tab-context-menu-firefox-78
+/en-US/kb/export-login-data-firefox-lockwise
+/en-US/kb/credit-card-autofill
