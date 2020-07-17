@@ -39,7 +39,7 @@ six = "==1.14.0"
 uritemplate = "==3.0.1"
 urllib3 = "==1.25.8"
 coverage = "*"
-pysocks = "*"
+pysocks = {markers = "extra == 'socks'",version = ">=1.5.6,!=1.5.7"}
 
 [requires]
 python_version = "3.7"
