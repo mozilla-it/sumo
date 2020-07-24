@@ -36,16 +36,23 @@ def get_lib_path():
     return os.path.dirname(os.path.realpath(__file__))
 
 def get_dimension_filter_clauses_from_file(subset, dim_name):
+    #
+    # Each URL here is getting its own operator/dimensionName/expressions stanza,
+    # but it occurs to me that we only need one stanza and all the URLs
+    # could go in its "expressions" part.
+    # But I'm not sure, so I won't mess with it at this point.
+    #
     clauses = []
     dict_skeleton = {
-        "operator": "EXACT",
+        "operator": "REGEXP",
         "dimensionName": dim_name,
     }
     urls_fullpath = os.path.join(get_lib_path(), f"urls_{subset}.txt")
     with open(urls_fullpath) as f:
         for line in f:
             nodomain = re.sub("^https://support.mozilla.org", "", line.rstrip())
-            dict_skeleton["expressions"] = [nodomain]
+            regex = f"^{nodomain}(\?.*)?$"
+            dict_skeleton["expressions"] = [regex]
             clauses.append(dict_skeleton.copy())
 
     return(
@@ -847,7 +854,7 @@ if __name__ == '__main__':
     
     #hmmm no dedupe process
     # run historical kb_exit_rate and users_by_country in increments less than or equal to month so as not to hit API limits
-    start_date = date(2020, 3, 16) # inclusive
+    start_date = date(2020, 6, 28) # inclusive
     end_date = datetime.today().date() - timedelta(days=2) # exclusive
     
     main(start_date, end_date)
