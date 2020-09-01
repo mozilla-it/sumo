@@ -832,7 +832,11 @@ def main(start_date=None, end_date=None):
 
     run_kb_exit_rate(analytics, start_date, end_date)
 
-    for subset_name in ["fenix", "desktop", "vpn"]:
+    run_questions_exit_rate(analytics, start_date, end_date)
+
+    run_search_ctr(analytics, start_date, end_date)
+
+    for subset_name in ["fenix", "vpn", "desktop"]:
         run_total_users_kb(analytics, start_date, end_date, subset_name)
 
         run_inproduct_vs_organic(analytics, start_date, end_date, subset_name)
@@ -840,10 +844,6 @@ def main(start_date=None, end_date=None):
         run_inproduct_vs_organic_by_page(analytics, start_date, end_date, subset_name)
 
         run_kb_exit_rate(analytics, start_date, end_date, subset_name)
-
-    run_questions_exit_rate(analytics, start_date, end_date)
-
-    run_search_ctr(analytics, start_date, end_date)
 
 if __name__ == '__main__':
 
