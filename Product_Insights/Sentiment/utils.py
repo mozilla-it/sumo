@@ -9,8 +9,9 @@ translate_client = translate.Client()
 def gc_detect_language(text):
     """Calls the Google Cloud Language detection API"""
 
-    if len(text.encode("utf-8")) > 200000:
-        return("0", "EN") # shrug
+    if len(text.encode("utf-8")) > 2000:
+        #return("0", "EN") # shrug
+        text = text[:2000]
     result = translate_client.detect_language(text)
     return(result['confidence'], result['language'])
     
