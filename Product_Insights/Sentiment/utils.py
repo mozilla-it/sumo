@@ -19,6 +19,8 @@ def gc_sentiment(text, type=enums.Document.Type.PLAIN_TEXT,
                  language='en'):  
     """Calls the Google Cloud Sentiment Analysis API"""
 
+    if len(text.encode("utf-8")) > 5000:
+        text = text[:5000]
     document = types.Document(
             content=text,
             type=type,
