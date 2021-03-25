@@ -1,6 +1,7 @@
 from google.cloud import translate_v2 as translate
-from google.cloud import language_v1
-from google.cloud.language_v1 import enums, types
+from google.cloud import language
+#from google.cloud import language_v1
+#from google.cloud.language_v1 import enums, types
 
 
 language_client = language.LanguageServiceClient()
@@ -15,13 +16,15 @@ def gc_detect_language(text):
     result = translate_client.detect_language(text)
     return(result['confidence'], result['language'])
     
-def gc_sentiment(text, type=enums.Document.Type.PLAIN_TEXT,
+#def gc_sentiment(text, type=enums.Document.Type.PLAIN_TEXT,
+def gc_sentiment(text, type="PLAIN_TEXT",
                  language='en'):  
     """Calls the Google Cloud Sentiment Analysis API"""
 
     if len(text.encode("utf-8")) > 5000:
         text = text[:5000]
-    document = types.Document(
+    #document = types.Document(
+    document = language.types.Document(
             content=text,
             type=type,
             language=language)
