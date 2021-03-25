@@ -38,7 +38,7 @@ setup(name='sumo',
           'SurveyGizmo',
           'gcsfs',
           'Cython',
-          'pyarrow==0.9.0',
+          'pyarrow',
           'python-dateutil',
           'PySocks',
           'pytrends'
