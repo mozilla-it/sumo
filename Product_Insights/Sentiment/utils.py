@@ -18,7 +18,7 @@ def gc_detect_language(text):
     
 #def gc_sentiment(text, type=enums.Document.Type.PLAIN_TEXT,
 def gc_sentiment(text, type="PLAIN_TEXT",
-                 language='en'):  
+                 language_str='en'):  
     """Calls the Google Cloud Sentiment Analysis API"""
 
     if len(text.encode("utf-8")) > 5000:
@@ -27,7 +27,7 @@ def gc_sentiment(text, type="PLAIN_TEXT",
     document = language.types.Document(
             content=text,
             type=type,
-            language=language)
+            language=language_str)
     annotations = language_client.analyze_sentiment(document=document)
     score = annotations.document_sentiment.score
     magnitude = annotations.document_sentiment.magnitude
