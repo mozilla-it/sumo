@@ -1,5 +1,5 @@
 from google.cloud import translate_v2 as translate
-from google.cloud import language
+from google.cloud import language_v1
 from google.cloud.language_v1 import enums, types
 
 
