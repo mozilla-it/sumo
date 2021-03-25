@@ -1,8 +1,5 @@
 from google.cloud import translate_v2 as translate
-from google.cloud import language
-#from google.cloud import language_v1
-#from google.cloud.language_v1 import enums, types
-
+from google.cloud import language_v1 as language
 
 language_client = language.LanguageServiceClient()
 translate_client = translate.Client()
@@ -24,7 +21,7 @@ def gc_sentiment(text, type="PLAIN_TEXT",
     if len(text.encode("utf-8")) > 5000:
         text = text[:5000]
     #document = types.Document(
-    document = language.types.Document(
+    document = language.Document(
             content=text,
             type=type,
             language=language_str)
