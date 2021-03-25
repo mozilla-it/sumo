@@ -1,6 +1,6 @@
 from google.cloud import translate_v2 as translate
 from google.cloud import language
-from google.cloud.language import enums, types
+from google.cloud.language_v1 import enums, types
 
 
 language_client = language.LanguageServiceClient()
