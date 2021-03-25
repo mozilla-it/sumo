@@ -37,7 +37,7 @@ setup(name='sumo',
           'google-api-python-client',
           'SurveyGizmo',
           'gcsfs',
-          'pyarrow',
+          'pyarrow==0.9.0',
           'python-dateutil',
           'PySocks',
           'pytrends'
