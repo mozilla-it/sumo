@@ -229,7 +229,8 @@ def update_bq_table(uri, fn, table_name, table_schema, write_disposition):
   job_config = bigquery.LoadJobConfig()
   job_config.write_disposition = write_disposition #"WRITE_TRUNCATE" #"WRITE_APPEND"  
   job_config.source_format = bigquery.SourceFormat.CSV
-  job_config.maxBadRecords = 10
+  #job_config.maxBadRecords = 10
+  job_config.max_bad_records = 10
   job_config.skip_leading_rows = 1
   job_config.field_delimiter = "|"
 
